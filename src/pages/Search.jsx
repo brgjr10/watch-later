@@ -69,7 +69,7 @@ export default function Search() {
   const fetchYouTubeTitle = async (url) => {
     try {
       const response = await fetch(
-        `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+        `https://noembed.com/embed?url=${encodeURIComponent(url)}`
       );
       if (response.ok) {
         const data = await response.json();
