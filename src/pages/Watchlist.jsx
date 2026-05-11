@@ -128,13 +128,13 @@ export default function Watchlist() {
           <div key={item.id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20">
             <div className="flex">
               {/* Poster/Thumbnail */}
-              <div className="relative w-20 aspect-video flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+              <div className="relative flex-shrink-0">
                 {item.type === "youtube" ? (
-                  <>
+                  <div className="w-24 aspect-video">
                     <img
                       src={getYouTubeThumbnail(item.url)}
                       alt="YouTube thumbnail"
-                      className="w-full h-full object-contain p-1"
+                      className="w-full h-full object-cover rounded-l-2xl"
                       onError={(e) => {
                         e.target.src = "https://via.placeholder.com/320x180?text=YT";
                       }}
@@ -144,15 +144,17 @@ export default function Watchlist() {
                         <Play className="w-4 h-4 text-gray-900 ml-0.5" fill="currentColor" />
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : item.poster ? (
-                  <img
-                    src={getImageUrl(item.poster)}
-                    alt={item.title}
-                    className="w-full h-full object-contain p-1"
-                  />
+                  <div className="w-24 h-36">
+                    <img
+                      src={getImageUrl(item.poster)}
+                      alt={item.title}
+                      className="w-full h-full object-cover rounded-l-2xl"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-24 h-36 bg-gray-100 dark:bg-gray-800 rounded-l-2xl flex items-center justify-center">
                     <Bookmark className="w-6 h-6 text-gray-400" />
                   </div>
                 )}
