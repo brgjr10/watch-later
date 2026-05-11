@@ -55,33 +55,35 @@ export default function Watchlist() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-slate-800 rounded-lg p-4">
+          <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
             {item.poster && (
               <img
                 src={getImageUrl(item.poster)}
                 alt={item.title}
-                className="w-full h-48 object-cover rounded mb-2"
+                className="w-16 h-24 object-cover rounded"
               />
             )}
-            <h3 className="font-semibold">{item.title}</h3>
-            <p className="text-sm text-slate-400">{item.type === "tv" ? "TV" : "Movie"}</p>
-            {item.provider && (
-              <p className="text-xs text-blue-400 mt-1">{item.provider}</p>
-            )}
-            <div className="flex gap-2 mt-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold truncate">{item.title}</h3>
+              <p className="text-xs text-slate-400">{item.type === "tv" ? "TV" : "Movie"}</p>
+              {item.provider && (
+                <p className="text-xs text-blue-400 mt-1">{item.provider}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
               <button
                 onClick={() => handleToggleWatched(item.id, item.watched)}
-                className={`flex-1 px-2 py-1 text-sm rounded ${
+                className={`px-3 py-1 text-xs rounded ${
                   item.watched ? "bg-green-600" : "bg-slate-600"
                 }`}
               >
-                {item.watched ? "Watched" : "Mark Watched"}
+                {item.watched ? "✓" : "Watched"}
               </button>
               <button
                 onClick={() => handleRemove(item.id)}
-                className="px-2 py-1 text-sm bg-red-600 rounded"
+                className="px-3 py-1 text-xs bg-red-600 rounded"
               >
                 ×
               </button>

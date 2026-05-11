@@ -107,20 +107,29 @@ export default function Search() {
             {results.map((item) => (
               <div
                 key={item.id}
-                className="bg-slate-800 rounded-lg p-4 cursor-pointer hover:bg-slate-700"
-                onClick={() => handleSelect(item)}
+                className="bg-slate-800 rounded-lg p-4 hover:bg-slate-700"
               >
-                {item.poster && (
-                  <img
-                    src={getImageUrl(item.poster)}
-                    alt={item.title}
-                    className="w-full h-48 object-cover rounded mb-2"
-                  />
-                )}
-                <h3 className="font-semibold">{item.title}</h3>
-                <p className="text-sm text-slate-400">
-                  {item.type === "tv" ? "TV Show" : "Movie"}
-                </p>
+                <div className="flex gap-3">
+                  {item.poster && (
+                    <img
+                      src={getImageUrl(item.poster)}
+                      alt={item.title}
+                      className="w-16 h-24 object-cover rounded"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-sm text-slate-400">
+                      {item.type === "tv" ? "TV Show" : "Movie"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleSelect(item)}
+                    className="self-start px-3 py-1 bg-blue-600 rounded text-sm"
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
             ))}
           </div>
