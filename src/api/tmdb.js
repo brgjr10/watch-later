@@ -33,7 +33,6 @@ export const getMediaDetails = async (type, id) => {
 };
 
 export const getYouTubeVideoDetails = async (videoId) => {
-  console.log("getYouTubeVideoDetails called with videoId:", videoId);
   try {
     const res = await fetch(
       `/api/youtube/videos?part=snippet,contentDetails&id=${videoId}`
@@ -49,7 +48,6 @@ export const getYouTubeVideoDetails = async (videoId) => {
       const duration = item.contentDetails?.duration
         ? parseISO8601Duration(item.contentDetails.duration)
         : null;
-      console.log("YouTube API result:", { title, duration });
       return { title, duration };
     }
   } catch (e) {
