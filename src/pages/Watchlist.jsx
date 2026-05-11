@@ -81,7 +81,7 @@ export default function Watchlist() {
           <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
             {item.type === "youtube" ? (
               <img
-                src={getYouTubeThumbnail(item.url)}
+                src={item.url ? getYouTubeThumbnail(item.url) : "https://via.placeholder.com/64x96?text=YT"}
                 alt="YouTube thumbnail"
                 className="w-16 h-24 object-cover rounded"
                 onError={(e) => {
@@ -98,10 +98,12 @@ export default function Watchlist() {
               )
             )}
             <div className="flex-1 min-w-0">
-              {item.type === "youtube" ? (
+              {item.type === "youtube" && item.url ? (
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold truncate text-blue-400 hover:text-blue-300">
-                  {item.title}
+                  {item.title.replace("YouTube: ", "")}
                 </a>
+              ) : item.type === "youtube" ? (
+                <h3 className="font-semibold truncate">{item.title}</h3>
               ) : (
                 <h3 className="font-semibold truncate">{item.title}</h3>
               )}
