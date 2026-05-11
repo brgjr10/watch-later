@@ -130,16 +130,16 @@ export default function Watchlist() {
               {/* Poster/Thumbnail */}
               <div className="relative flex-shrink-0">
                 {item.type === "youtube" ? (
-                  <div className="w-24 aspect-video">
+                  <div className="w-24 h-36">
                     <img
                       src={getYouTubeThumbnail(item.url)}
                       alt="YouTube thumbnail"
                       className="w-full h-full object-contain rounded-l-2xl"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/320x180?text=YT";
+                        e.target.src = "https://via.placeholder.com/240x360?text=YT";
                       }}
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
                       <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
                         <Play className="w-4 h-4 text-gray-900 ml-0.5" fill="currentColor" />
                       </div>
