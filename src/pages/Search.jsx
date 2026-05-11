@@ -66,6 +66,21 @@ export default function Search() {
     return match ? match[1] : null;
   };
 
+  const fetchYouTubeTitle = async (url) => {
+    try {
+      const response = await fetch(
+        `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        return data.title;
+      }
+    } catch (e) {
+      console.error("Could not fetch YouTube title", e);
+    }
+    return null;
+  };
+
   const handleManualAdd = async () => {
     if (!manualTitle) return;
 
@@ -78,15 +93,17 @@ export default function Search() {
       const videoId = extractYouTubeId(manualTitle);
       if (videoId) {
         provider = "YouTube";
-        title = `YouTube Video (${videoId})`;
         youtubeUrl = manualTitle;
+        // Fetch actual video title
+        const videoTitle = await fetchYouTubeTitle(manualTitle);
+        title = videoTitle || videoId;
       }
     }
 
     await addWatchlistItem(user.uid, {
       tmdbId: Date.now(),
       title: title,
-      type: "youtube",
+      type: youtubeUrl ? "youtube" : "movie",
       provider: provider || "Unknown",
       poster: null,
       url: youtubeUrl,
