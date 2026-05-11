@@ -103,11 +103,11 @@ export default function Search() {
             Can't find it? Add manually
           </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-3 max-w-lg mx-auto">
             {results.map((item) => (
               <div
                 key={item.id}
-                className="bg-slate-800 rounded-lg p-4 hover:bg-slate-700"
+                className="bg-slate-800 rounded-lg p-3 hover:bg-slate-700"
               >
                 <div className="flex gap-3">
                   {item.poster && (
@@ -117,8 +117,8 @@ export default function Search() {
                       className="w-16 h-24 object-cover rounded"
                     />
                   )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.title}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold truncate">{item.title}</h3>
                     <p className="text-sm text-slate-400">
                       {item.type === "tv" ? "TV Show" : "Movie"}
                     </p>
@@ -135,36 +135,36 @@ export default function Search() {
           </div>
         </>
       ) : (
-        <div className="max-w-md">
-          <input
-            type="text"
-            placeholder="Title"
-            value={manualTitle}
-            onChange={(e) => setManualTitle(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-800 rounded-lg mb-3"
-          />
-          <input
-            type="text"
-            placeholder="Provider (e.g., Netflix, Hulu)"
-            value={manualProvider}
-            onChange={(e) => setManualProvider(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-800 rounded-lg mb-3"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleManualAdd}
-              className="flex-1 px-4 py-2 bg-blue-600 rounded-lg"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => setManualMode(false)}
-              className="px-4 py-2 bg-slate-700 rounded-lg"
-            >
-              Cancel
-            </button>
+<div className="flex flex-col gap-3 max-w-sm mx-auto">
+            <input
+              type="text"
+              placeholder="Title"
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Provider (e.g., Netflix, Hulu)"
+              value={manualProvider}
+              onChange={(e) => setManualProvider(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 rounded-lg"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleManualAdd}
+                className="flex-1 px-4 py-2 bg-blue-600 rounded-lg"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setManualMode(false)}
+                className="px-4 py-2 bg-slate-700 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
       )}
     </div>
   );
