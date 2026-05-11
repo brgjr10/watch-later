@@ -164,27 +164,6 @@ export default function Watchlist() {
                   </div>
                 )}
               </div>
-                    </div>
-                  </div>
-                ) : item.poster ? (
-                  <div className="w-24 h-36">
-                    <img
-                      src={getImageUrl(item.poster)}
-                      alt={item.title}
-                      className="w-full h-full object-cover rounded-l-2xl"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-24 h-36 bg-gray-100 dark:bg-gray-800 rounded-l-2xl flex items-center justify-center">
-                    <Bookmark className="w-6 h-6 text-gray-400" />
-                  </div>
-                )}
-                {item.watched && (
-                  <div className="absolute top-1.5 right-1.5 bg-green-500 rounded-full p-0.5 shadow-md">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                )}
-              </div>
 
               {/* Content */}
               <div className="flex-1 p-3 min-w-0">
