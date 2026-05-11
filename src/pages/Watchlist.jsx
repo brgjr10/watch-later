@@ -48,6 +48,16 @@ const formatDuration = (seconds) => {
   return `${mins}:${(seconds % 60).toString().padStart(2, '0')}`;
 };
 
+const formatRuntime = (minutes) => {
+  if (!minutes) return null;
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`;
+  }
+  return `${mins}m`;
+};
+
 export default function Watchlist() {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
@@ -180,7 +190,7 @@ export default function Watchlist() {
                       <Clock className="w-3 h-3" />
                       {item.type === "youtube"
                         ? formatDuration(item.duration)
-                        : `${item.duration} min`}
+                        : formatRuntime(item.duration)}
                     </span>
                   )}
 
