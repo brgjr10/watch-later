@@ -145,12 +145,12 @@ export default function Watchlist() {
                      <img
                        src={getProviderLogoPath(item.provider)}
                        alt={item.provider}
-                       className="w-4 h-auto"
+                       className="w-4 h-4 flex-shrink-0"
                      />
                    ) : (
-                     <span className="text-xs">{getProviderIcon(item.provider)}</span>
+                     <span className="text-[10px]">{getProviderIcon(item.provider)}</span>
                    )}
-                   <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded ${getProviderColor(item.provider)}`}>
+                   <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded ${getProviderColor(item.provider)} whitespace-nowrap`}>
                      {item.provider}
                    </span>
                  </div>
@@ -160,9 +160,9 @@ export default function Watchlist() {
                     <img
                       src="/providers/youtube.svg"
                       alt="YouTube"
-                      className="w-4 h-auto"
+                      className="w-4 h-4 flex-shrink-0"
                     />
-                    <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500">
+                    <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500 whitespace-nowrap">
                       YouTube
                     </span>
                   </div>
