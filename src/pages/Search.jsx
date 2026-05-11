@@ -69,13 +69,15 @@ export default function Search() {
 
     let provider = manualProvider;
     let title = manualTitle;
+    let youtubeUrl = null;
 
     // If it's a YouTube URL, extract info
     if (isYouTubeUrl(manualTitle)) {
       const videoId = extractYouTubeId(manualTitle);
       if (videoId) {
         provider = "YouTube";
-        title = `YouTube: ${videoId}`;
+        title = manualTitle;
+        youtubeUrl = manualTitle;
       }
     }
 
@@ -85,6 +87,7 @@ export default function Search() {
       type: "youtube",
       provider: provider || "Unknown",
       poster: null,
+      url: youtubeUrl,
     });
 
     navigate("/");

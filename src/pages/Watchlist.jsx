@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
+import { getImageUrl } from "../api/tmdb";
+
+const getYouTubeThumbnail = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  if (match) {
+    return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+  }
+  return null;
+};
 
 const getProviderColor = (provider) => {
   const colors = {
@@ -14,7 +24,6 @@ const getProviderColor = (provider) => {
   };
   return colors[provider] || "bg-slate-600";
 };
-import { getImageUrl } from "../api/tmdb";
 
 export default function Watchlist() {
   const { user } = useAuth();
@@ -70,20 +79,32 @@ export default function Watchlist() {
       <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
           <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
-            {item.poster && item.type !== "youtube" && (
+            {item.type === "youtube" ? (
               <img
-                src={getImageUrl(item.poster)}
-                alt={item.title}
+                src={getYouTubeThumbnail(item.url)}
+                alt="YouTube thumbnail"
                 className="w-16 h-24 object-cover rounded"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/64x96?text=YT";
+                }}
               />
-            )}
-            {item.type === "youtube" && (
-              <div className="w-16 h-24 bg-red-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">YT</span>
-              </div>
+            ) : (
+              item.poster && (
+                <img
+                  src={getImageUrl(item.poster)}
+                  alt={item.title}
+                  className="w-16 h-24 object-cover rounded"
+                />
+              )
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate">{item.title}</h3>
+              {item.type === "youtube" ? (
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold truncate text-blue-400 hover:text-blue-300">
+                  {item.title}
+                </a>
+              ) : (
+                <h3 className="font-semibold truncate">{item.title}</h3>
+              )}
               <p className="text-xs text-slate-400">
                 {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
               </p>
