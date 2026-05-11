@@ -33,7 +33,7 @@ export default function Search() {
             title: r.name || r.title,
             type: r.media_type === "tv" ? "tv" : "movie",
             poster: r.poster_path,
-            overview: r.overview,
+            overview: r.overview ?? null,
           }))
       );
     } catch (error) {
@@ -58,13 +58,19 @@ export default function Search() {
       const usProviders = providers.results?.US?.flatrate || [];
 
       const provider = usProviders[0]?.provider_name || "Unknown";
-      const logoPath = usProviders[0]?.logo_path || null;
+      const logoPath = usProviders[0]?.logo_path ?? null;
 
       let runtime = null;
       if (item.type === "movie" || item.type === "tv") {
         try {
           const details = await getMediaDetails(item.type, item.id);
-          runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
+          if (details.runtime != null) {
+            runtime = details.runtime;
+          } else if (details.episode_run_time && details.episode_run_time.length > 0) {
+            runtime = details.episode_run_time[0];
+          } else {
+            runtime = null;
+          }
         } catch (error) {
           console.error("Failed to fetch runtime:", error);
         }
@@ -74,8 +80,8 @@ export default function Search() {
         tmdbId: item.id,
         title: item.title,
         type: item.type,
-        poster: item.poster,
-        overview: item.overview,
+        poster: item.poster ?? null,
+        overview: item.overview ?? null,
         provider,
         logoPath,
         duration: runtime,
@@ -143,15 +149,15 @@ export default function Search() {
       }
     }
 
-    await addWatchlistItem(user.uid, {
-      tmdbId: Date.now(),
-      title: title,
-      type: youtubeUrl ? "youtube" : "movie",
-      provider: provider || "Unknown",
-      poster: null,
-      url: youtubeUrl,
-      duration: youtubeDuration,
-    });
+     await addWatchlistItem(user.uid, {
+       tmdbId: Date.now(),
+       title: title,
+       type: youtubeUrl ? "youtube" : "movie",
+       provider: provider || "Unknown",
+       poster: null,
+       url: youtubeUrl,
+       duration: youtubeDuration ?? null,
+     });
 
     navigate("/");
   };
