@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { searchTitles, getWatchProviders, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
@@ -71,8 +71,9 @@ export default function Search() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Find a Title</h1>
+      <div className="flex justify-between items-center mb-4">
+        <Link to="/" className="text-blue-400">← Back</Link>
+        <h1 className="text-xl font-bold">Find a Title</h1>
       </div>
 
       {!manualMode ? (
