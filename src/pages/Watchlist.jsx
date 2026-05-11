@@ -145,7 +145,8 @@ export default function Watchlist() {
                      <img
                        src={getProviderLogoPath(item.provider)}
                        alt={item.provider}
-                       className="w-5 h-5 flex-shrink-0"
+                       className="flex-shrink-0"
+                       style={{ width: '20px', height: '20px' }}
                      />
                    ) : (
                      <span className="text-sm">{getProviderIcon(item.provider)}</span>
@@ -160,7 +161,8 @@ export default function Watchlist() {
                     <img
                       src="/providers/youtube.svg"
                       alt="YouTube"
-                      className="w-5 h-5 flex-shrink-0"
+                      className="flex-shrink-0"
+                      style={{ width: '20px', height: '20px' }}
                     />
                     <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-red-500 whitespace-nowrap">
                       YouTube
