@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
-import { getImageUrl } from "../api/tmdb";
+
+const getProviderColor = (provider) => {
+  const colors = {
+    "Netflix": "bg-red-600",
+    "Disney+": "bg-blue-700",
+    "Hulu": "bg-green-600",
+    "Amazon Prime Video": "bg-blue-500",
+    "HBO Max": "bg-purple-600",
+    "YouTube": "bg-red-500",
+  };
+  return colors[provider] || "bg-slate-600";
+};
 import { getImageUrl } from "../api/tmdb";
 
 export default function Watchlist() {
@@ -77,7 +88,14 @@ export default function Watchlist() {
                 {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
               </p>
               {item.provider && item.type !== "youtube" && (
-                <p className="text-xs text-blue-400 mt-1">{item.provider}</p>
+                <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
+                  {item.provider}
+                </span>
+              )}
+              {item.type === "youtube" && (
+                <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
+                  YouTube
+                </span>
               )}
             </div>
             <div className="flex flex-col gap-1">
