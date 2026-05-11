@@ -102,14 +102,14 @@ export default function Watchlist() {
 
       <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-slate-800 rounded-lg p-2 flex gap-2 items-center">
+          <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3 items-start">
             {item.type === "youtube" ? (
               <img
                 src={getYouTubeThumbnail(item.url)}
                 alt="YouTube thumbnail"
-                className="w-[48px] h-[27px] object-cover rounded"
+                className="w-20 h-12 object-cover rounded"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/48x27?text=YT";
+                  e.target.src = "https://via.placeholder.com/80x45?text=YT";
                 }}
               />
             ) : (
@@ -117,7 +117,7 @@ export default function Watchlist() {
                 <img
                   src={getImageUrl(item.poster)}
                   alt={item.title}
-                  className="w-[40px] h-[60px] object-cover rounded"
+                  className="w-12 h-18 object-cover rounded"
                 />
               )
             )}
@@ -140,10 +140,10 @@ export default function Watchlist() {
                     <img
                       src={getProviderLogoPath(item.provider)}
                       alt={item.provider}
-                      className="w-2 h-auto"
+                      className="w-5 h-auto"
                     />
                   ) : (
-                    <span className="text-[10px]">{getProviderIcon(item.provider)}</span>
+                    <span className="text-sm">{getProviderIcon(item.provider)}</span>
                   )}
                   <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
                     {item.provider}
@@ -155,9 +155,9 @@ export default function Watchlist() {
                   <img
                     src="/providers/youtube.svg"
                     alt="YouTube"
-                    className="w-2 h-auto"
+                    className="w-5 h-auto"
                   />
-                  <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-red-500">
+                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
                     YouTube
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export default function Watchlist() {
             <div className="flex flex-col gap-1">
               <button
                 onClick={() => handleToggleWatched(item.id, item.watched)}
-                className={`px-2 py-0.5 text-xs rounded ${
+                className={`px-3 py-1 text-xs rounded w-full ${
                   item.watched ? "bg-green-600" : "bg-slate-600"
                 }`}
               >
@@ -174,7 +174,7 @@ export default function Watchlist() {
               </button>
               <button
                 onClick={() => handleRemove(item.id)}
-                className="px-2 py-0.5 text-xs bg-red-600 rounded"
+                className="px-3 py-1 text-xs bg-red-600 rounded w-full"
               >
                 ×
               </button>
