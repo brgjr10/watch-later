@@ -70,12 +70,16 @@ export default function Search() {
     navigate("/");
   };
 
-  const extractYouTubeId = (url) => {
-    const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-    return match ? match[1] : null;
-  };
+   const extractYouTubeId = (url) => {
+     const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+     return match ? match[1] : null;
+   };
 
-  const fetchYouTubeInfo = async (url) => {
+   const isYouTubeUrl = (url) => {
+     return url.includes("youtube.com") || url.includes("youtu.be");
+   };
+
+   const fetchYouTubeInfo = async (url) => {
     const videoId = extractYouTubeId(url);
     if (!videoId) return { title: null, duration: null };
 
