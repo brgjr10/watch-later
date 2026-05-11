@@ -128,13 +128,13 @@ export default function Watchlist() {
           <div key={item.id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20">
             <div className="flex">
               {/* Poster/Thumbnail */}
-              <div className="relative w-20 aspect-video flex-shrink-0">
+              <div className="relative w-20 aspect-video flex-shrink-0 bg-gray-100 dark:bg-gray-800">
                 {item.type === "youtube" ? (
                   <>
                     <img
                       src={getYouTubeThumbnail(item.url)}
                       alt="YouTube thumbnail"
-                      className="w-full h-full object-cover rounded-l-2xl"
+                      className="w-full h-full object-contain p-1"
                       onError={(e) => {
                         e.target.src = "https://via.placeholder.com/320x180?text=YT";
                       }}
@@ -149,10 +149,10 @@ export default function Watchlist() {
                   <img
                     src={getImageUrl(item.poster)}
                     alt={item.title}
-                    className="w-full h-full object-cover rounded-l-2xl"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-l-2xl">
+                  <div className="w-full h-full flex items-center justify-center">
                     <Bookmark className="w-6 h-6 text-gray-400" />
                   </div>
                 )}
