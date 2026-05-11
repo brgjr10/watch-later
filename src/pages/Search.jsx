@@ -64,7 +64,7 @@ export default function Search() {
       overview: item.overview,
       provider,
       logoPath,
-      runtime,
+      duration: runtime,
     });
 
     navigate("/");
