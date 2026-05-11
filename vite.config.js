@@ -8,16 +8,11 @@ export default defineConfig({
       "/api/youtube": {
         target: "https://www.googleapis.com",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/youtube/, "/youtube/v3"),
-        configure: (proxy, options) => {
-          proxy.on("proxyReq", (proxyReq, req, res) => {
-            const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY;
-            if (YOUTUBE_API_KEY) {
-              const url = new URL(proxyReq.path, "https://www.googleapis.com");
-              url.searchParams.set("key", YOUTUBE_API_KEY);
-              proxyReq.path = url.pathname + url.search;
-            }
-          });
+        rewrite: (path) => {
+          const newPath = path.replace(/^\/api\/youtube/, "/youtube/v3");
+          const url = new URL(newPath, "https://www.googleapis.com");
+          url.searchParams.set("key", process.env.VITE_YOUTUBE_API_KEY);
+          return url.pathname + url.search;
         },
       },
     },
