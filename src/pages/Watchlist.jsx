@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
 import { getImageUrl } from "../api/tmdb";
-import { Check, X, Play, Film, Tv, Plus, ExternalLink } from "lucide-react";
+import { Check, X, Play, Plus, ExternalLink } from "lucide-react";
 
 const getProviderIcon = (provider) => {
   const icons = {
@@ -73,12 +73,6 @@ const FilterTabs = ({ filter, setFilter, counts }) => (
 );
 
 const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
-  const getTypeIcon = () => {
-    if (item.type === "youtube") return <Play className="w-3 h-3" />;
-    if (item.type === "tv") return <Tv className="w-3 h-3" />;
-    return <Film className="w-3 h-3" />;
-  };
-
   return (
     <div className="group bg-slate-800 rounded-lg p-3 flex gap-3 items-center">
       <div className="relative flex-shrink-0">
