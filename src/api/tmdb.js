@@ -33,12 +33,19 @@ export const getMediaDetails = async (type, id) => {
 };
 
 export const getYouTubeVideoDetails = async (videoId) => {
-  if (!YOUTUBE_API_KEY) return { title: null, duration: null };
+  console.log("getYouTubeVideoDetails called with videoId:", videoId, "key present:", !!YOUTUBE_API_KEY);
+  if (!YOUTUBE_API_KEY) {
+    console.warn("No YouTube API key — returning nulls");
+    return { title: null, duration: null };
+  }
   try {
     const res = await fetch(
       `${YOUTUBE_BASE_URL}/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`
     );
-    if (!res.ok) return { title: null, duration: null };
+    if (!res.ok) {
+      console.error("YouTube API error:", res.status, res.statusText);
+      return { title: null, duration: null };
+    }
     const data = await res.json();
     if (data.items?.[0]) {
       const item = data.items[0];
@@ -46,10 +53,11 @@ export const getYouTubeVideoDetails = async (videoId) => {
       const duration = item.contentDetails?.duration
         ? parseISO8601Duration(item.contentDetails.duration)
         : null;
+      console.log("YouTube API result:", { title, duration });
       return { title, duration };
     }
   } catch (e) {
-    console.error("YouTube API error:", e);
+    console.error("YouTube API fetch error:", e);
   }
   return { title: null, duration: null };
 };
