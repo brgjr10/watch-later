@@ -140,7 +140,7 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
               <img
                 src={getProviderLogoPath(item.provider)}
                 alt={item.provider}
-                className="w-4 h-4"
+                style={{ width: 20, height: 20 }}
               />
             ) : (
               <span className="text-xs">{getProviderIcon(item.provider)}</span>
@@ -153,7 +153,7 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
 
         {item.type === "youtube" && (
           <div className="flex items-center gap-1.5">
-            <img src="/providers/youtube.svg" alt="YouTube" className="w-4 h-4" />
+            <img src="/providers/youtube.svg" alt="YouTube" style={{ width: 20, height: 20 }} />
             <span className="inline-block px-1.5 py-0 text-xs rounded bg-red-500">
               YouTube
             </span>
