@@ -32,21 +32,26 @@ export const getMediaDetails = async (type, id) => {
   return res.json();
 };
 
-export const getYouTubeDuration = async (videoId) => {
-  if (!YOUTUBE_API_KEY) return null;
+export const getYouTubeVideoDetails = async (videoId) => {
+  if (!YOUTUBE_API_KEY) return { title: null, duration: null };
   try {
     const res = await fetch(
-      `${YOUTUBE_BASE_URL}/videos?part=contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`
+      `${YOUTUBE_BASE_URL}/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { title: null, duration: null };
     const data = await res.json();
-    if (data.items?.[0]?.contentDetails?.duration) {
-      return parseISO8601Duration(data.items[0].contentDetails.duration);
+    if (data.items?.[0]) {
+      const item = data.items[0];
+      const title = item.snippet?.title || null;
+      const duration = item.contentDetails?.duration
+        ? parseISO8601Duration(item.contentDetails.duration)
+        : null;
+      return { title, duration };
     }
   } catch (e) {
     console.error("YouTube API error:", e);
   }
-  return null;
+  return { title: null, duration: null };
 };
 
 function parseISO8601Duration(isoDuration) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime, getYouTubeDuration } from "../api/tmdb";
+import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime, getYouTubeVideoDetails } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
 
 export default function Search() {
@@ -80,29 +80,29 @@ export default function Search() {
    };
 
    const fetchYouTubeInfo = async (url) => {
-    const videoId = extractYouTubeId(url);
-    if (!videoId) return { title: null, duration: null };
+     const videoId = extractYouTubeId(url);
+     if (!videoId) return { title: null, duration: null };
 
-    // Use YouTube Data API if available
-    const ytDuration = await getYouTubeDuration(videoId);
-    if (ytDuration) {
-      return { title: null, duration: ytDuration };
-    }
+     // Use YouTube Data API to get both title and duration
+     const details = await getYouTubeVideoDetails(videoId);
+     if (details.duration || details.title) {
+       return details;
+     }
 
-    // Fallback to noembed for title only
-    try {
-      const response = await fetch(
-        `https://noembed.com/embed?url=${encodeURIComponent(url)}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        return { title: data.title, duration: null };
-      }
-    } catch (e) {
-      console.error("Could not fetch YouTube info", e);
-    }
-    return { title: null, duration: null };
-  };
+     // Fallback to noembed for title only
+     try {
+       const response = await fetch(
+         `https://noembed.com/embed?url=${encodeURIComponent(url)}`
+       );
+       if (response.ok) {
+         const data = await response.json();
+         return { title: data.title, duration: null };
+       }
+     } catch (e) {
+       console.error("Could not fetch YouTube info", e);
+     }
+     return { title: null, duration: null };
+   };
 
   const handleManualAdd = async () => {
     if (!manualTitle) return;
