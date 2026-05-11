@@ -55,14 +55,35 @@ export default function Search() {
     navigate("/");
   };
 
+  const isYouTubeUrl = (url) => {
+    return url.includes("youtube.com") || url.includes("youtu.be");
+  };
+
+  const extractYouTubeId = (url) => {
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match ? match[1] : null;
+  };
+
   const handleManualAdd = async () => {
-    if (!manualTitle || !manualProvider) return;
+    if (!manualTitle) return;
+
+    let provider = manualProvider;
+    let title = manualTitle;
+
+    // If it's a YouTube URL, extract info
+    if (isYouTubeUrl(manualTitle)) {
+      const videoId = extractYouTubeId(manualTitle);
+      if (videoId) {
+        provider = "YouTube";
+        title = `YouTube: ${videoId}`;
+      }
+    }
 
     await addWatchlistItem(user.uid, {
       tmdbId: Date.now(),
-      title: manualTitle,
-      type: "movie",
-      provider: manualProvider,
+      title: title,
+      type: "youtube",
+      provider: provider || "Unknown",
       poster: null,
     });
 
@@ -139,14 +160,14 @@ export default function Search() {
         <div className="flex flex-col gap-3 max-w-sm mx-auto">
           <input
             type="text"
-            placeholder="Title"
+            placeholder="Title or YouTube URL"
             value={manualTitle}
             onChange={(e) => setManualTitle(e.target.value)}
             className="w-full px-4 py-2 bg-slate-800 rounded-lg"
           />
           <input
             type="text"
-            placeholder="Provider (e.g., Netflix, Hulu)"
+            placeholder="Provider (optional - YouTube links auto-fill)"
             value={manualProvider}
             onChange={(e) => setManualProvider(e.target.value)}
             className="w-full px-4 py-2 bg-slate-800 rounded-lg"

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
 import { getImageUrl } from "../api/tmdb";
+import { getImageUrl } from "../api/tmdb";
 
 export default function Watchlist() {
   const { user } = useAuth();
@@ -58,17 +59,24 @@ export default function Watchlist() {
       <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
           <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
-            {item.poster && (
+            {item.poster && item.type !== "youtube" && (
               <img
                 src={getImageUrl(item.poster)}
                 alt={item.title}
                 className="w-16 h-24 object-cover rounded"
               />
             )}
+            {item.type === "youtube" && (
+              <div className="w-16 h-24 bg-red-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">YT</span>
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold truncate">{item.title}</h3>
-              <p className="text-xs text-slate-400">{item.type === "tv" ? "TV" : "Movie"}</p>
-              {item.provider && (
+              <p className="text-xs text-slate-400">
+                {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
+              </p>
+              {item.provider && item.type !== "youtube" && (
                 <p className="text-xs text-blue-400 mt-1">{item.provider}</p>
               )}
             </div>
