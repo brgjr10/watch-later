@@ -1,12 +1,31 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--color-indigo-600);
+  --color-secondary: var(--color-orange-600);
+  --color-info: var(--color-blue-600);
+}
+
+:root {
+  --color-bg: white;
+  --color-text: #111827;
+}
+
+.dark {
+  --color-bg: #030712;
+  --color-text: #f9fafb;
+}
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #0f172a;
-  color: white;
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family: Inter, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
 }
