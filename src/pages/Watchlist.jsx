@@ -1,9 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
+import {
+  subscribeToWatchlist,
+  toggleWatched as toggleWatchedService,
+  removeWatchlistItem as removeWatchlistItemService,
+} from "../services/watchlistService";
 import { getImageUrl } from "../api/tmdb";
-import { Check, X, Play, Plus, Bookmark, Clock } from "lucide-react";
+import {
+  Check,
+  X,
+  Plus,
+  Bookmark,
+  Clock,
+  Trash2,
+  Search as SearchIcon,
+  Filter,
+  SortAsc,
+  SortDesc,
+  Grid3X3,
+  List,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 const getYouTubeThumbnail = (url) => {
   if (!url) return null;
@@ -16,12 +35,14 @@ const getYouTubeThumbnail = (url) => {
 
 const getProviderColor = (provider) => {
   const colors = {
-    "Netflix": "bg-red-600",
+    Netflix: "bg-red-600",
     "Disney+": "bg-blue-700",
-    "Hulu": "bg-green-600",
-    "Amazon Prime Video": "bg-blue-500",
+    Hulu: "bg-emerald-600",
+    "Amazon Prime Video": "bg-amber-600",
     "HBO Max": "bg-purple-600",
-    "YouTube": "bg-red-500",
+    YouTube: "bg-red-500",
+    Apple: "bg-gray-500",
+    Peacock: "bg-teal-500",
   };
   return colors[provider] || "bg-slate-600";
 };
@@ -32,9 +53,9 @@ const formatDuration = (seconds) => {
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   if (hrs > 0) {
-    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
 const formatRuntime = (minutes) => {
@@ -47,196 +68,745 @@ const formatRuntime = (minutes) => {
   return `${mins}m`;
 };
 
-export default function Watchlist() {
-  const { user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState("all");
-
-  useEffect(() => {
-    if (!user) return;
-    const unsubscribe = subscribeToWatchlist(user.uid, setItems);
-    return unsubscribe;
-  }, [user]);
-
-  const counts = {
-    all: items.length,
-    unwatched: items.filter(i => !i.watched).length,
-    watched: items.filter(i => i.watched).length,
-  };
-
-  const filteredItems = items.filter((item) => {
-    if (filter === "watched") return item.watched;
-    if (filter === "unwatched") return !item.watched;
-    return true;
-  });
-
-  const handleToggleWatched = async (itemId, watched) => {
-    await toggleWatched(user.uid, itemId, !watched);
-  };
-
-  const handleRemove = async (itemId) => {
-    await removeWatchlistItem(user.uid, itemId);
-  };
-
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white pb-20">
-      {/* Header */}
-      <div className="px-4 pt-12 pb-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Watchlist</h1>
-          <Link
-            to="/search"
-            className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform"
-          >
-            <Plus className="w-5 h-5 text-white" />
-          </Link>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-1 mb-6">
-          {["all", "unwatched", "watched"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filter === f
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
-            </button>
-          ))}
+function SkeletonItem({ grid }) {
+  if (grid) {
+    return (
+      <div className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+        <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
+        <div className="p-4 space-y-3">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          <div className="flex gap-2">
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+          </div>
         </div>
       </div>
+    );
+  }
+  return (
+    <div className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
+      <div className="flex">
+        <div className="w-20 h-36 bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex-shrink-0" />
+        <div className="flex-1 p-4 space-y-3">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+          <div className="flex gap-2">
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      {/* List */}
-      <div className="px-4 space-y-3">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20">
-            <div className="flex">
-              {/* Poster/Thumbnail */}
-              <div className="relative flex-shrink-0">
-                {item.type === "youtube" ? (
-                  <div className="w-48 h-36">
-                    <img
-                      src={getYouTubeThumbnail(item.url)}
-                      alt="YouTube thumbnail"
-                      className="w-full h-full object-cover rounded-l-2xl"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/640x360?text=YT";
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                      <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-                        <Play className="w-4 h-4 text-gray-900 ml-0.5" fill="currentColor" />
-                      </div>
-                    </div>
-                  </div>
-                ) : item.poster ? (
-                  <div className="w-24 h-36">
-                    <img
-                      src={getImageUrl(item.poster)}
-                      alt={item.title}
-                      className="w-full h-full object-cover rounded-l-2xl"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-24 h-36 bg-gray-100 dark:bg-gray-800 rounded-l-2xl flex items-center justify-center">
-                    <Bookmark className="w-6 h-6 text-gray-400" />
-                  </div>
-                )}
-                {item.watched && (
-                  <div className="absolute top-1.5 right-1.5 bg-green-500 rounded-full p-0.5 shadow-md">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                )}
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center pt-20 px-4 animate-fade-in">
+      <div className="w-24 h-24 mb-4 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl animate-pulse-glow" />
+        <div className="relative w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-500/20">
+          <PlayIcon className="w-10 h-10 text-white" />
+        </div>
+      </div>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        Your watchlist is empty
+      </h3>
+      <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-8">
+        Start discovering movies and TV shows to watch. Add items from the Discover page or search for something specific.
+      </p>
+      <div className="flex gap-3 flex-wrap justify-center">
+        <Link
+          to="/search"
+          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full font-medium shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform text-white flex items-center gap-2 hover:shadow-xl hover:shadow-indigo-500/40"
+        >
+          <Plus className="w-4 h-4" />
+          Add Something to Watch
+        </Link>
+      </div>
+      <p className="mt-8 text-sm text-gray-400 dark:text-gray-500">
+        Tips: You can search for movies, TV shows, or even YouTube videos!
+      </p>
+    </div>
+  );
+}
+
+function PlayIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <polygon points="5 3 19 12 5 21" />
+    </svg>
+  );
+}
+
+function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove }) {
+  return (
+    <div
+      className={`bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 transition-all duration-200 ${
+        isSelected ? "ring-2 ring-indigo-500" : ""
+      }`}
+    >
+      <div className="flex items-center min-h-[100px]">
+        {isSelectionMode && (
+          <div className="ml-3 flex-shrink-0">
+            <button
+              onClick={() => onToggleSelect(item.id)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                isSelected
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              }`}
+            >
+              {isSelected && <Check className="w-3 h-3" />}
+            </button>
+          </div>
+        )}
+
+        <div className="relative flex-shrink-0 w-20 h-28 sm:w-24 sm:h-36">
+          {item.type === "youtube" ? (
+            <>
+              <img
+                src={getYouTubeThumbnail(item.url)}
+                alt={item.title}
+                className="w-full h-full object-cover rounded-l-2xl"
+                onError={(e) => {
+                  const parent = e.target.parentElement;
+                  const fb = parent?.querySelector(".youtube-fallback");
+                  if (fb) fb.classList.remove("hidden");
+                  e.target.classList.add("hidden");
+                }}
+              />
+              <div
+                className="hidden absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-l-2xl items-center justify-center youtube-fallback"
+              >
+                <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
               </div>
+            </>
+          ) : item.poster ? (
+            <img
+              src={getImageUrl(item.poster)}
+              alt={item.title}
+              className="w-full h-full object-cover rounded-l-2xl"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-l-2xl flex items-center justify-center">
+              <Bookmark className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
 
-              {/* Content */}
-              <div className="flex-1 p-3 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  {item.type === "youtube" && item.url ? (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-gray-900 dark:text-white text-base leading-tight line-clamp-1"
-                    >
-                      {item.title}
-                    </a>
-                  ) : (
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-base leading-tight line-clamp-1">{item.title}</h3>
-                  )}
-                </div>
+          {item.watched && (
+            <div className="absolute top-1.5 right-1.5 bg-green-500/90 backdrop-blur-sm rounded-full p-0.5 shadow-md">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          )}
 
-                <div className="flex items-center gap-2 flex-wrap mb-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
-                    {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
-                  </span>
+          <div className="absolute bottom-1.5 left-1.5">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-black/60 text-white backdrop-blur-sm">
+              {item.type === "tv" ? "TV" : item.type === "youtube" ? "YT" : "MOV"}
+            </span>
+          </div>
+        </div>
 
-                  {/* Duration/Runtime */}
-                  {item.duration && (
-                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
-                      <Clock className="w-3 h-3" />
-                      {item.type === "youtube"
-                        ? formatDuration(item.duration)
-                        : formatRuntime(item.duration)}
-                    </span>
-                  )}
+        <div className="flex-1 p-3 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            {item.type === "youtube" && item.url ? (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => isSelectionMode && e.preventDefault()}
+                className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
+              >
+                {item.title}
+              </a>
+            ) : (
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+                {item.title}
+              </h3>
+            )}
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+              {item.addedAt
+                ? new Date(item.addedAt).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })
+                : ""}
+            </span>
+          </div>
 
-                  {item.provider && item.type !== "youtube" && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getProviderColor(item.provider)}`}>
-                      {item.provider}
-                    </span>
-                  )}
-                  {item.type === "youtube" && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
-                      YouTube
-                    </span>
-                  )}
-                </div>
-              </div>
+          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+            <span className="text-[11px] px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-medium">
+              {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
+            </span>
 
-              {/* Actions */}
-              <div className="flex flex-col justify-center pr-3 gap-2">
+            {item.duration && (
+              <span className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
+                <Clock className="w-3 h-3" />
+                {item.type === "youtube"
+                  ? formatDuration(item.duration)
+                  : formatRuntime(item.duration)}
+              </span>
+            )}
+
+            {item.provider && item.type !== "youtube" && (
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getProviderColor(item.provider)} text-white`}
+              >
+                {item.provider}
+              </span>
+            )}
+            {item.type === "youtube" && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-500 text-white font-medium">
+                YouTube
+              </span>
+            )}
+          </div>
+
+          {item.overview && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 line-clamp-2">
+              {item.overview}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col justify-center pr-3 gap-2 flex-shrink-0">
+          <button
+            onClick={() => onToggleWatched(item.id, item.watched)}
+            className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+              item.watched
+                ? "bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            {item.watched ? (
+              <>
+                <Eye className="w-3 h-3" /> Seen
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-3 h-3" /> Want to Watch
+              </>
+            )}
+          </button>
+          {!isSelectionMode && (
+            <button
+              onClick={() => onRemove(item.id)}
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+              title="Remove"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove }) {
+  return (
+    <div
+      className={`bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 transition-all duration-300 group ${
+        isSelected ? "ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950" : ""
+      }`}
+    >
+      <div className="relative">
+        {isSelectionMode && (
+          <div className="absolute top-2 left-2 z-20">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect(item.id);
+              }}
+              className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${
+                isSelected
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : "border-white bg-black/40 text-white/0 hover:text-white/100"
+              }`}
+            >
+              <Check className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {item.type === "youtube" ? (
+          <>
+            <img
+              src={getYouTubeThumbnail(item.url)}
+              alt={item.title}
+              className="w-full aspect-[2/3] object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+                const fb = e.target.nextElementSibling;
+                if (fb) fb.style.display = "flex";
+              }}
+            />
+            <div
+              className="hidden absolute inset-0 bg-gray-300 dark:bg-gray-800 items-center justify-center"
+              style={{ display: "none" }}
+            >
+              <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+            </div>
+          </>
+        ) : item.poster ? (
+          <img
+            src={getImageUrl(item.poster)}
+            alt={item.title}
+            className="w-full aspect-[2/3] object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+            <Bookmark className="w-10 h-10 text-gray-400" />
+          </div>
+        )}
+
+        {!isSelectionMode && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleToggleWatched(item.id, item.watched)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleWatched(item.id, item.watched);
+                  }}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                     item.watched
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-700"
+                      ? "bg-green-600/90 text-white"
+                      : "bg-white/90 text-gray-900 hover:bg-white"
                   }`}
                 >
-                  {item.watched ? "Watched" : "Mark watched"}
+                  {item.watched ? (
+                    <>
+                      <Eye className="w-4 h-4" /> Seen
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="w-4 h-4" /> Watch
+                    </>
+                  )}
                 </button>
                 <button
-                  onClick={() => handleRemove(item.id)}
-                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(item.id);
+                  }}
+                  className="w-10 h-10 bg-white/90 hover:bg-red-500/90 text-gray-700 hover:text-white rounded-lg flex items-center justify-center transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
-        ))}
+        )}
+
+        {item.watched && (
+          <div className="absolute top-2 right-2 bg-green-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-md">
+            <Check className="w-3 h-3 text-white" />
+          </div>
+        )}
+
+        <div className="absolute bottom-2 left-2">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-black/50 text-white">
+            {item.type === "tv" ? "TV" : item.type === "youtube" ? "YT" : "MOV"}
+          </span>
+        </div>
       </div>
 
-      {/* Empty State */}
-      {filteredItems.length === 0 && (
-        <div className="flex flex-col items-center justify-center pt-24 px-4">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center mb-4">
-            <Bookmark className="w-10 h-10 text-gray-400" />
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 text-lg mb-6">Your watchlist is empty</p>
-          <Link
-            to="/search"
-            className="px-6 py-3 bg-primary rounded-full font-medium shadow-lg shadow-primary/30 active:scale-95 transition-transform text-white"
+      <div className="p-3">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+          {item.title}
+        </h3>
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+            {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
+            {item.provider && item.type !== "youtube" && ` · ${item.provider}`}
+          </span>
+          {item.duration && (
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {item.type === "youtube"
+                ? formatDuration(item.duration)
+                : formatRuntime(item.duration)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Watchlist() {
+  const { user } = useAuth();
+  const [items, setItems] = useState([]);
+  const [filter, setFilter] = useState("unwatched");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("addedAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [viewMode, setViewMode] = useState("list");
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false); // eslint-disable-line react-hooks/set-state-in-effect
+      return;
+    }
+    setLoading(true);
+    const unsubscribe = subscribeToWatchlist(user.uid, (fetchedItems) => {
+      setItems(fetchedItems);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, [user]);
+
+  const counts = useMemo(
+    () => ({
+      all: items.length,
+      unwatched: items.filter((i) => !i.watched).length,
+      watched: items.filter((i) => i.watched).length,
+    }),
+    [items]
+  );
+
+  const handleToggleWatched = useCallback(
+    (itemId, currentWatched) => {
+      toggleWatchedService(user.uid, itemId, !currentWatched);
+    },
+    [user]
+  );
+
+  const handleRemove = useCallback(
+    (itemId) => {
+      removeWatchlistItemService(user.uid, itemId);
+    },
+    [user]
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    if (!user || selectedItems.size === 0) return;
+    Array.from(selectedItems).forEach((id) => {
+      removeWatchlistItemService(user.uid, id);
+    });
+    setSelectedItems(new Set());
+    setIsSelectionMode(false);
+  }, [user, selectedItems]);
+
+  const handleBulkMarkWatched = useCallback(() => {
+    if (!user || selectedItems.size === 0) return;
+    Array.from(selectedItems).forEach((id) => {
+      toggleWatchedService(user.uid, id, true);
+    });
+    setSelectedItems(new Set());
+    setIsSelectionMode(false);
+  }, [user, selectedItems]);
+
+  // Filter, search, and sort items
+  const filteredItems = useMemo(() => {
+    let filtered = items;
+
+    // Apply filter
+    if (filter === "watched") {
+      filtered = filtered.filter((i) => i.watched);
+    } else if (filter === "unwatched") {
+      filtered = filtered.filter((i) => !i.watched);
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          (i.type && i.type.toLowerCase().includes(q)) ||
+          (i.provider && i.provider.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "title":
+          return sortOrder === "asc"
+            ? (a.title || "").localeCompare(b.title || "")
+            : (b.title || "").localeCompare(a.title || "");
+        case "type":
+          return sortOrder === "asc"
+            ? (a.type || "").localeCompare(b.type || "")
+            : (b.type || "").localeCompare(a.type || "");
+        case "addedAt":
+          return sortOrder === "asc"
+            ? (a.addedAt || 0) - (b.addedAt || 0)
+            : (b.addedAt || 0) - (a.addedAt || 0);
+        case "watched":
+          return sortOrder === "asc"
+            ? Number(a.watched || false) - Number(b.watched || false)
+            : Number(b.watched || false) - Number(a.watched || false);
+        case "provider":
+          return sortOrder === "asc"
+            ? (a.provider || "").localeCompare(b.provider || "")
+            : (b.provider || "").localeCompare(a.provider || "");
+        default:
+          return sortOrder === "asc"
+            ? (a.addedAt || 0) - (b.addedAt || 0)
+            : (b.addedAt || 0) - (a.addedAt || 0);
+      }
+    });
+
+    return sorted;
+  }, [items, filter, searchQuery, sortBy, sortOrder]);
+
+  const handleToggleSelectItem = useCallback((itemId) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }, []);
+
+  return (
+    <div className="pb-20">
+      {/* Header */}
+      <header className="pt-8 pb-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+            {filter === "unwatched"
+              ? "What to Watch"
+              : filter === "watched"
+              ? "Watched"
+              : "Your Watchlist"}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {filter === "unwatched"
+              ? `${counts.unwatched} ${counts.unwatched === 1 ? "title" : "titles"} left to enjoy`
+              : filter === "watched"
+              ? `${counts.watched} completed`
+              : `${counts.all} total`}
+          </p>
+        </div>
+
+        {/* Quick Stats Bar */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => {
+              setFilter("all");
+              setIsSelectionMode(false);
+            }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              filter === "all"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
           >
-            Add your first item
-          </Link>
+            All ({counts.all})
+          </button>
+          <button
+            onClick={() => {
+              setFilter("unwatched");
+              setIsSelectionMode(false);
+            }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              filter === "unwatched"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            🎬 To Watch ({counts.unwatched})
+          </button>
+          <button
+            onClick={() => {
+              setFilter("watched");
+              setIsSelectionMode(false);
+            }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              filter === "watched"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            ✅ Watched ({counts.watched})
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative mb-4">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, type, or provider..."
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            {/* Sort */}
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setSortOrder((o) => (o === "desc" ? "asc" : "desc"))}
+                className="px-3 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                title={`Sort: ${sortOrder === "desc" ? "Descending" : "Ascending"}`}
+              >
+                {sortOrder === "desc" ? (
+                  <SortDesc className="w-4 h-4" />
+                ) : (
+                  <SortAsc className="w-4 h-4" />
+                )}
+              </button>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-sm text-gray-700 dark:text-gray-300 pr-3 outline-none cursor-pointer"
+              >
+                <option value="addedAt">Date Added</option>
+                <option value="title">Title</option>
+                <option value="type">Type</option>
+                <option value="provider">Provider</option>
+                <option value="watched">Status</option>
+              </select>
+            </div>
+
+            {/* View Mode */}
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 transition-all ${
+                  viewMode === "list"
+                    ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                    : "text-gray-500 dark:text-gray-400"
+                } rounded-l-xl`}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 transition-all ${
+                  viewMode === "grid"
+                    ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                    : "text-gray-500 dark:text-gray-400"
+                } rounded-r-xl`}
+                title="Grid view"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Selection Mode Actions */}
+          {isSelectionMode ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {selectedItems.size} selected
+              </span>
+              <button
+                onClick={handleBulkMarkWatched}
+                className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-all flex items-center gap-1"
+              >
+                <Check className="w-3 h-3" /> Watched
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-all flex items-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" /> Delete
+              </button>
+              <button
+                onClick={() => {
+                  setIsSelectionMode(false);
+                  setSelectedItems(new Set());
+                }}
+                className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {filteredItems.length > 0 && (
+                <button
+                  onClick={() => setIsSelectionMode(true)}
+                  className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all flex items-center gap-1"
+                >
+                  <Filter className="w-4 h-4" /> Select
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Content */}
+      {loading ? (
+        <div
+          className={`${
+            viewMode === "grid"
+              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+              : "space-y-3"
+          }`}
+        >
+          {Array.from({ length: viewMode === "grid" ? 10 : 5 }).map((_, i) => (
+            <SkeletonItem key={i} grid={viewMode === "grid"} />
+          ))}
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <EmptyState />
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
+          {filteredItems.map((item) => (
+            <GridItem
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.has(item.id)}
+              isSelectionMode={isSelectionMode}
+              onToggleSelect={handleToggleSelectItem}
+              onToggleWatched={handleToggleWatched}
+              onRemove={handleRemove}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3 animate-fade-in">
+          {filteredItems.map((item) => (
+            <ListItem
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.has(item.id)}
+              isSelectionMode={isSelectionMode}
+              onToggleSelect={handleToggleSelectItem}
+              onToggleWatched={handleToggleWatched}
+              onRemove={handleRemove}
+            />
+          ))}
         </div>
       )}
+
+      {/* Add FAB */}
+      <Link
+        to="/search"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/40 active:scale-90 transition-all duration-200 z-40 no-underline"
+        title="Add new title"
+      >
+        <Plus className="w-6 h-6 text-white" />
+      </Link>
     </div>
   );
 }
