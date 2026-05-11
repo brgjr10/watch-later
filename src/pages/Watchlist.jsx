@@ -31,22 +31,22 @@ export default function Watchlist() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Watchlist</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">My Watchlist</h1>
         <Link
           to="/search"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
         >
-          + Add Title
+          + Add
         </Link>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1 mb-3">
         {["all", "unwatched", "watched"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded ${
+            className={`px-2 py-1 rounded text-sm ${
               filter === f ? "bg-blue-600" : "bg-slate-700"
             }`}
           >
