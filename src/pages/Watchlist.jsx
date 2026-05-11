@@ -129,15 +129,17 @@ export default function Watchlist() {
               </p>
               {item.provider && item.type !== "youtube" && (
                 <div className="flex items-center gap-1 mt-1">
-                  {item.providerLogo && (
+                  {item.providerLogo ? (
                     <img
                       src={getProviderLogoUrl(item.providerLogo)}
                       alt={item.provider}
                       className="w-5 h-auto"
                     />
+                  ) : (
+                    <span>{getProviderIcon(item.provider)}</span>
                   )}
                   <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
-                    {getProviderIcon(item.provider)} {item.provider}
+                    {item.provider}
                   </span>
                 </div>
               )}
