@@ -1,6 +1,8 @@
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 const BASE_URL = "https://api.themoviedb.org/3";
+const YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 export const searchTitles = async (query) => {
   const res = await fetch(
@@ -25,6 +27,33 @@ export const getMediaDetails = async (type, id) => {
   if (!res.ok) throw new Error("Failed to fetch media details");
   return res.json();
 };
+
+export const getYouTubeDuration = async (videoId) => {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const res = await fetch(
+      `${YOUTUBE_BASE_URL}/videos?part=contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.items?.[0]?.contentDetails?.duration) {
+      return parseISO8601Duration(data.items[0].contentDetails.duration);
+    }
+  } catch (e) {
+    console.error("YouTube API error:", e);
+  }
+  return null;
+};
+
+function parseISO8601Duration(isoDuration) {
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return null;
+  const hrs = parseInt(match[1] || 0);
+  const mins = parseInt(match[2] || 0);
+  const secs = parseInt(match[3] || 0);
+  const totalSeconds = hrs * 3600 + mins * 60 + secs;
+  return totalSeconds;
+}
 
 export const getImageUrl = (path) => {
   if (!path) return null;

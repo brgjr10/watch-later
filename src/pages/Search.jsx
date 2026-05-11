@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime } from "../api/tmdb";
+import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime, getYouTubeDuration } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
 
 export default function Search() {
@@ -70,31 +70,34 @@ export default function Search() {
     navigate("/");
   };
 
+  const extractYouTubeId = (url) => {
+    const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+    return match ? match[1] : null;
+  };
+
   const fetchYouTubeInfo = async (url) => {
+    const videoId = extractYouTubeId(url);
+    if (!videoId) return { title: null, duration: null };
+
+    // Use YouTube Data API if available
+    const ytDuration = await getYouTubeDuration(videoId);
+    if (ytDuration) {
+      return { title: null, duration: ytDuration };
+    }
+
+    // Fallback to noembed for title only
     try {
       const response = await fetch(
         `https://noembed.com/embed?url=${encodeURIComponent(url)}`
       );
       if (response.ok) {
         const data = await response.json();
-        return {
-          title: data.title,
-          duration: data.length_seconds || null,
-        };
+        return { title: data.title, duration: null };
       }
     } catch (e) {
       console.error("Could not fetch YouTube info", e);
     }
     return { title: null, duration: null };
-  };
-
-  const isYouTubeUrl = (url) => {
-    return url.includes("youtube.com") || url.includes("youtu.be");
-  };
-
-  const extractYouTubeId = (url) => {
-    const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-    return match ? match[1] : null;
   };
 
   const handleManualAdd = async () => {
