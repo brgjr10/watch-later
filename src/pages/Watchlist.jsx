@@ -113,13 +113,13 @@ export default function Watchlist() {
                 }}
               />
             ) : (
-              item.poster && (
-                <img
-                  src={getImageUrl(item.poster)}
-                  alt={item.title}
-                  className="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded flex-shrink-0"
-                />
-              )
+               item.poster && (
+                 <img
+                   src={getImageUrl(item.poster)}
+                   alt={item.title}
+                   className="w-10 h-14 sm:w-12 sm:h-16 object-cover rounded flex-shrink-0"
+                 />
+               )
             )}
             <div className="flex-1 min-w-0">
               {item.type === "youtube" && item.url ? (
@@ -145,28 +145,28 @@ export default function Watchlist() {
                      <img
                        src={getProviderLogoPath(item.provider)}
                        alt={item.provider}
-                       className="w-3 h-3 flex-shrink-0"
+                       className="w-5 h-5 flex-shrink-0"
                      />
                    ) : (
-                     <span className="text-[10px]">{getProviderIcon(item.provider)}</span>
+                     <span className="text-sm">{getProviderIcon(item.provider)}</span>
                    )}
-                   <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded ${getProviderColor(item.provider)} whitespace-nowrap`}>
+                   <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getProviderColor(item.provider)} whitespace-nowrap`}>
                      {item.provider}
                    </span>
                  </div>
                )}
-                 {item.type === "youtube" && (
-                   <div className="flex items-center gap-1 mt-0.5 self-start">
-                     <img
-                       src="/providers/youtube.svg"
-                       alt="YouTube"
-                       className="w-3 h-3 flex-shrink-0"
-                     />
-                     <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500 whitespace-nowrap">
-                       YouTube
-                     </span>
-                   </div>
-                 )}
+                {item.type === "youtube" && (
+                  <div className="flex items-center gap-1 mt-0.5 self-start">
+                    <img
+                      src="/providers/youtube.svg"
+                      alt="YouTube"
+                      className="w-5 h-5 flex-shrink-0"
+                    />
+                    <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-red-500 whitespace-nowrap">
+                      YouTube
+                    </span>
+                  </div>
+                )}
             </div>
              <div className="flex flex-col gap-1 min-w-[56px]">
               <button
