@@ -104,21 +104,21 @@ export default function Watchlist() {
         {filteredItems.map((item) => (
           <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
 {item.type === "youtube" ? (
-                <img
-                  src={item.url ? getYouTubeThumbnail(item.url) : "https://via.placeholder.com/96x64?text=YT"}
-                  alt="YouTube thumbnail"
-                  className="w-24 h-16 object-cover rounded"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/96x64?text=YT";
-                  }}
-                />
+<img
+                src={getYouTubeThumbnail(item.url)}
+                alt="YouTube thumbnail"
+                className="w-[64px] h-[36px] object-cover rounded"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/64x36?text=YT";
+                }}
+              />
               ) : (
                 item.poster && (
                   <img
-                    src={getImageUrl(item.poster)}
-                    alt={item.title}
-                    className="w-16 h-24 object-cover rounded"
-                  />
+                src={getImageUrl(item.poster)}
+                alt={item.title}
+                className="w-[48px] h-[72px] object-cover rounded"
+              />
                 )
               )}
             <div className="flex-1 min-w-0">
