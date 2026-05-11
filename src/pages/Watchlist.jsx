@@ -102,7 +102,7 @@ export default function Watchlist() {
 
       <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-slate-800 rounded-lg p-2 flex gap-2">
+          <div key={item.id} className="bg-slate-800 rounded-lg p-2 flex gap-2 items-center">
             {item.type === "youtube" ? (
               <img
                 src={getYouTubeThumbnail(item.url)}
@@ -140,10 +140,10 @@ export default function Watchlist() {
                     <img
                       src={getProviderLogoPath(item.provider)}
                       alt={item.provider}
-                      className="w-3 h-auto"
+                      className="w-2 h-auto"
                     />
                   ) : (
-                    <span className="text-xs">{getProviderIcon(item.provider)}</span>
+                    <span className="text-[10px]">{getProviderIcon(item.provider)}</span>
                   )}
                   <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
                     {item.provider}
@@ -155,9 +155,9 @@ export default function Watchlist() {
                   <img
                     src="/providers/youtube.svg"
                     alt="YouTube"
-                    className="w-3 h-auto"
+                    className="w-2 h-auto"
                   />
-                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
+                  <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-red-500">
                     YouTube
                   </span>
                 </div>
