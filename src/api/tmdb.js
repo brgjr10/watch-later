@@ -1,6 +1,10 @@
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
+if (!YOUTUBE_API_KEY) {
+  console.warn("VITE_YOUTUBE_API_KEY not set. YouTube video durations will not be displayed.");
+}
+
 const BASE_URL = "https://api.themoviedb.org/3";
 const YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
