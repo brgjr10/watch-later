@@ -140,12 +140,12 @@ export default function Watchlist() {
                 {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
               </p>
                {item.provider && item.type !== "youtube" && (
-                 <div className="flex items-center gap-1 mt-0.5">
+                 <div className="flex items-center gap-1 mt-0.5 self-start">
                    {getProviderLogoPath(item.provider) ? (
                      <img
                        src={getProviderLogoPath(item.provider)}
                        alt={item.provider}
-                       className="w-4 h-4 flex-shrink-0"
+                       className="w-3 h-3 flex-shrink-0"
                      />
                    ) : (
                      <span className="text-[10px]">{getProviderIcon(item.provider)}</span>
@@ -155,18 +155,18 @@ export default function Watchlist() {
                    </span>
                  </div>
                )}
-                {item.type === "youtube" && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <img
-                      src="/providers/youtube.svg"
-                      alt="YouTube"
-                      className="w-4 h-4 flex-shrink-0"
-                    />
-                    <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500 whitespace-nowrap">
-                      YouTube
-                    </span>
-                  </div>
-                )}
+                 {item.type === "youtube" && (
+                   <div className="flex items-center gap-1 mt-0.5 self-start">
+                     <img
+                       src="/providers/youtube.svg"
+                       alt="YouTube"
+                       className="w-3 h-3 flex-shrink-0"
+                     />
+                     <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500 whitespace-nowrap">
+                       YouTube
+                     </span>
+                   </div>
+                 )}
             </div>
              <div className="flex flex-col gap-1 min-w-[56px]">
               <button
