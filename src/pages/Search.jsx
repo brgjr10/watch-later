@@ -43,6 +43,7 @@ export default function Search() {
     const usProviders = providers.results?.US?.flatrate || [];
 
     const provider = usProviders[0]?.provider_name || "Unknown";
+    const providerLogo = usProviders[0]?.logo_path || null;
 
     await addWatchlistItem(user.uid, {
       tmdbId: item.id,
@@ -50,6 +51,7 @@ export default function Search() {
       type: item.type,
       poster: item.poster,
       provider,
+      providerLogo,
     });
 
     navigate("/");
@@ -76,7 +78,7 @@ export default function Search() {
       const videoId = extractYouTubeId(manualTitle);
       if (videoId) {
         provider = "YouTube";
-        title = manualTitle;
+        title = `YouTube Video (${videoId})`;
         youtubeUrl = manualTitle;
       }
     }

@@ -4,10 +4,25 @@ import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
 import { getImageUrl } from "../api/tmdb";
 
-const getYouTubeThumbnail = (url) => {
+const getProviderIcon = (provider) => {
+  const icons = {
+    "Netflix": "🎬",
+    "Disney+": "🏰",
+    "Hulu": "🟢",
+    "Amazon Prime Video": "📦",
+    "HBO Max": "🔵",
+    "YouTube": "▶️",
+  };
+  return icons[provider] || "📺";
+};
+
+const getProviderLogoUrl = (logoPath) => {
+  if (!logoPath) return null;
+  return `https://image.tmdb.org/t/p/w92${logoPath}`;
+};
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-  if (match) {
+  if (match && match[1]) {
     return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
   }
   return null;
@@ -100,7 +115,7 @@ export default function Watchlist() {
             <div className="flex-1 min-w-0">
               {item.type === "youtube" && item.url ? (
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold truncate text-blue-400 hover:text-blue-300">
-                  {item.title.replace("YouTube: ", "")}
+                  {item.title.replace("YouTube: ", "").replace(/https?:\/\/(www\.)?youtube\.com\/watch\?v=/, "").replace(/https?:\/\/youtu\.be\//, "") || "YouTube Video"}
                 </a>
               ) : item.type === "youtube" ? (
                 <h3 className="font-semibold truncate">{item.title}</h3>
@@ -111,9 +126,18 @@ export default function Watchlist() {
                 {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
               </p>
               {item.provider && item.type !== "youtube" && (
-                <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
-                  {item.provider}
-                </span>
+                <div className="flex items-center gap-1 mt-1">
+                  {item.providerLogo && (
+                    <img
+                      src={getProviderLogoUrl(item.providerLogo)}
+                      alt={item.provider}
+                      className="w-5 h-auto"
+                    />
+                  )}
+                  <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
+                    {getProviderIcon(item.provider)} {item.provider}
+                  </span>
+                </div>
               )}
               {item.type === "youtube" && (
                 <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
