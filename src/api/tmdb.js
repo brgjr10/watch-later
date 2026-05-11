@@ -33,17 +33,13 @@ export const getMediaDetails = async (type, id) => {
 };
 
 export const getYouTubeVideoDetails = async (videoId) => {
-  console.log("getYouTubeVideoDetails called with videoId:", videoId, "key present:", !!YOUTUBE_API_KEY);
-  if (!YOUTUBE_API_KEY) {
-    console.warn("No YouTube API key — returning nulls");
-    return { title: null, duration: null };
-  }
+  console.log("getYouTubeVideoDetails called with videoId:", videoId);
   try {
     const res = await fetch(
-      `${YOUTUBE_BASE_URL}/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`
+      `/api/youtube/videos?part=snippet,contentDetails&id=${videoId}`
     );
     if (!res.ok) {
-      console.error("YouTube API error:", res.status, res.statusText);
+      console.error("YouTube proxy error:", res.status, res.statusText);
       return { title: null, duration: null };
     }
     const data = await res.json();
