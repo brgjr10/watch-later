@@ -1,0 +1,162 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { searchTitles, getWatchProviders, getImageUrl } from "../api/tmdb";
+import { addWatchlistItem } from "../services/watchlistService";
+
+export default function Search() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualTitle, setManualTitle] = useState("");
+  const [manualProvider, setManualProvider] = useState("");
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setLoading(true);
+    try {
+      const data = await searchTitles(query);
+      setResults(
+        data.results
+          .filter((r) => r.media_type !== "person")
+          .map((r) => ({
+            id: r.id,
+            title: r.name || r.title,
+            type: r.media_type === "tv" ? "tv" : "movie",
+            poster: r.poster_path,
+            overview: r.overview,
+          }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  const handleSelect = async (item) => {
+    const providers = await getWatchProviders(item.type, item.id);
+    const usProviders = providers.results?.US?.flatrate || [];
+
+    const provider = usProviders[0]?.provider_name || "Unknown";
+
+    await addWatchlistItem(user.uid, {
+      tmdbId: item.id,
+      title: item.title,
+      type: item.type,
+      poster: item.poster,
+      provider,
+    });
+
+    navigate("/");
+  };
+
+  const handleManualAdd = async () => {
+    if (!manualTitle || !manualProvider) return;
+
+    await addWatchlistItem(user.uid, {
+      tmdbId: Date.now(),
+      title: manualTitle,
+      type: "movie",
+      provider: manualProvider,
+      poster: null,
+    });
+
+    navigate("/");
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Find a Title</h1>
+      </div>
+
+      {!manualMode ? (
+        <>
+          <form onSubmit={handleSearch} className="mb-6">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search movies or TV shows..."
+                className="flex-1 px-4 py-2 bg-slate-800 rounded-lg"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 rounded-lg"
+              >
+                {loading ? "..." : "Search"}
+              </button>
+            </div>
+          </form>
+
+          <button
+            onClick={() => setManualMode(true)}
+            className="mb-4 text-blue-400"
+          >
+            Can't find it? Add manually
+          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {results.map((item) => (
+              <div
+                key={item.id}
+                className="bg-slate-800 rounded-lg p-4 cursor-pointer hover:bg-slate-700"
+                onClick={() => handleSelect(item)}
+              >
+                {item.poster && (
+                  <img
+                    src={getImageUrl(item.poster)}
+                    alt={item.title}
+                    className="w-full h-48 object-cover rounded mb-2"
+                  />
+                )}
+                <h3 className="font-semibold">{item.title}</h3>
+                <p className="text-sm text-slate-400">
+                  {item.type === "tv" ? "TV Show" : "Movie"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="max-w-md">
+          <input
+            type="text"
+            placeholder="Title"
+            value={manualTitle}
+            onChange={(e) => setManualTitle(e.target.value)}
+            className="w-full px-4 py-2 bg-slate-800 rounded-lg mb-3"
+          />
+          <input
+            type="text"
+            placeholder="Provider (e.g., Netflix, Hulu)"
+            value={manualProvider}
+            onChange={(e) => setManualProvider(e.target.value)}
+            className="w-full px-4 py-2 bg-slate-800 rounded-lg mb-3"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleManualAdd}
+              className="flex-1 px-4 py-2 bg-blue-600 rounded-lg"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => setManualMode(false)}
+              className="px-4 py-2 bg-slate-700 rounded-lg"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
