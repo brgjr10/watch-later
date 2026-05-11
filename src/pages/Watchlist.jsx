@@ -124,7 +124,7 @@ export default function Watchlist() {
             <div className="flex-1 min-w-0">
               {item.type === "youtube" && item.url ? (
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold truncate text-blue-400 hover:text-blue-300">
-                  {item.title.replace("YouTube: ", "").replace(/https?:\/\/(www\.)?youtube\.com\/watch\?v=/, "").replace(/https?:\/\/youtu\.be\//, "") || "YouTube Video"}
+                  {item.title}
                 </a>
               ) : item.type === "youtube" ? (
                 <h3 className="font-semibold truncate">{item.title}</h3>
@@ -140,7 +140,7 @@ export default function Watchlist() {
                     <img
                       src={getProviderLogoPath(item.provider)}
                       alt={item.provider}
-                      className="w-5 h-auto"
+                      className="w-4 h-auto"
                     />
                   ) : (
                     <span>{getProviderIcon(item.provider)}</span>
@@ -151,9 +151,16 @@ export default function Watchlist() {
                 </div>
               )}
               {item.type === "youtube" && (
-                <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
-                  YouTube
-                </span>
+                <div className="flex items-center gap-1 mt-1">
+                  <img
+                    src="/providers/youtube.svg"
+                    alt="YouTube"
+                    className="w-4 h-auto"
+                  />
+                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
+                    YouTube
+                  </span>
+                </div>
               )}
             </div>
             <div className="flex flex-col gap-1">
