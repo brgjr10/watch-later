@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime, getYouTubeVideoDetails } from "../api/tmdb";
@@ -13,14 +13,18 @@ export default function Search() {
   const [manualMode, setManualMode] = useState(false);
   const [manualTitle, setManualTitle] = useState("");
   const [manualProvider, setManualProvider] = useState("");
+  const [error, setError] = useState(null);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleSearch = async (searchQuery) => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     try {
-      const data = await searchTitles(query);
+      const data = await searchTitles(searchQuery);
       setResults(
         data.results
           .filter((r) => r.media_type !== "person")
@@ -34,40 +38,54 @@ export default function Search() {
       );
     } catch (error) {
       console.error(error);
+      setError("Search failed. Please try again.");
+      setResults([]);
     }
     setLoading(false);
   };
 
+  // Debounce live search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const handleSelect = async (item) => {
-    const providers = await getWatchProviders(item.type, item.id);
-    const usProviders = providers.results?.US?.flatrate || [];
+    try {
+      const providers = await getWatchProviders(item.type, item.id);
+      const usProviders = providers.results?.US?.flatrate || [];
 
-    const provider = usProviders[0]?.provider_name || "Unknown";
-    const logoPath = usProviders[0]?.logo_path || null;
+      const provider = usProviders[0]?.provider_name || "Unknown";
+      const logoPath = usProviders[0]?.logo_path || null;
 
-    // Fetch runtime for TMDB items
-    let runtime = null;
-    if (item.type === "movie" || item.type === "tv") {
-      try {
-        const details = await getMediaDetails(item.type, item.id);
-        runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
-      } catch (error) {
-        console.error("Failed to fetch runtime:", error);
+      let runtime = null;
+      if (item.type === "movie" || item.type === "tv") {
+        try {
+          const details = await getMediaDetails(item.type, item.id);
+          runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
+        } catch (error) {
+          console.error("Failed to fetch runtime:", error);
+        }
       }
+
+      await addWatchlistItem(user.uid, {
+        tmdbId: item.id,
+        title: item.title,
+        type: item.type,
+        poster: item.poster,
+        overview: item.overview,
+        provider,
+        logoPath,
+        duration: runtime,
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Failed to add item:", error);
+      setError("Failed to add item. Please try again.");
     }
-
-    await addWatchlistItem(user.uid, {
-      tmdbId: item.id,
-      title: item.title,
-      type: item.type,
-      poster: item.poster,
-      overview: item.overview,
-      provider,
-      logoPath,
-      duration: runtime,
-    });
-
-    navigate("/");
   };
 
    const extractYouTubeId = (url) => {
@@ -138,73 +156,72 @@ export default function Search() {
     navigate("/");
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-4">
-        <Link to="/" className="text-blue-400">← Back</Link>
-        <h1 className="text-xl font-bold">Find a Title</h1>
-      </div>
+   return (
+     <div className="container mx-auto px-4 py-8">
+       <div className="flex justify-between items-center mb-4">
+         <Link to="/" className="text-blue-400">← Back</Link>
+         <h1 className="text-xl font-bold">Find a Title</h1>
+       </div>
 
-      {!manualMode ? (
-        <>
-          <form onSubmit={handleSearch} className="mb-6">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search movies or TV shows..."
-                className="flex-1 px-4 py-2 bg-slate-800 rounded-lg"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 rounded-lg"
-              >
-                {loading ? "..." : "Search"}
-              </button>
-            </div>
-          </form>
+       {error && (
+         <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
+           {error}
+         </div>
+       )}
 
-          <button
-            onClick={() => setManualMode(true)}
-            className="mb-4 text-blue-400"
-          >
-            Can't find it? Add manually
-          </button>
+       {!manualMode ? (
+         <>
+           <div className="mb-6">
+             <input
+               type="text"
+               value={query}
+               onChange={(e) => setQuery(e.target.value)}
+               placeholder="Search movies or TV shows..."
+               className="w-full px-4 py-2 bg-slate-800 rounded-lg"
+               autoFocus
+             />
+             {loading && <p className="mt-2 text-sm text-slate-400">Searching...</p>}
+           </div>
 
-          <div className="flex flex-col gap-3 max-w-lg mx-auto">
-            {results.map((item) => (
-              <div
-                key={item.id}
-                className="bg-slate-800 rounded-lg p-3 hover:bg-slate-700"
-              >
-                <div className="flex gap-3">
-                  {item.poster && (
-                    <img
-                      src={getImageUrl(item.poster)}
-                      alt={item.title}
-                      className="w-16 h-24 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{item.title}</h3>
-                    <p className="text-sm text-slate-400">
-                      {item.type === "tv" ? "TV Show" : "Movie"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleSelect(item)}
-                    className="self-start px-3 py-1 bg-blue-600 rounded text-sm"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
+           <button
+             onClick={() => setManualMode(true)}
+             className="mb-4 text-blue-400"
+           >
+             Can't find it? Add manually
+           </button>
+
+           <div className="flex flex-col gap-3 max-w-lg mx-auto">
+             {results.map((item) => (
+               <div
+                 key={item.id}
+                 className="bg-slate-800 rounded-lg p-3 hover:bg-slate-700"
+               >
+                 <div className="flex gap-3">
+                   {item.poster && (
+                     <img
+                       src={getImageUrl(item.poster)}
+                       alt={item.title}
+                       className="w-16 h-24 object-cover rounded"
+                     />
+                   )}
+                   <div className="flex-1 min-w-0">
+                     <h3 className="font-semibold truncate">{item.title}</h3>
+                     <p className="text-sm text-slate-400">
+                       {item.type === "tv" ? "TV Show" : "Movie"}
+                     </p>
+                   </div>
+                   <button
+                     onClick={() => handleSelect(item)}
+                     className="self-start px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500 active:scale-95 transition-transform"
+                   >
+                     Add
+                   </button>
+                 </div>
+               </div>
+             ))}
+           </div>
+         </>
+       ) : (
         <div className="flex flex-col gap-3 max-w-sm mx-auto">
           <input
             type="text"
