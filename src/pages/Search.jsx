@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { searchTitles, getWatchProviders, getImageUrl } from "../api/tmdb";
+import { searchTitles, getWatchProviders, getImageUrl, getMediaDetails, formatRuntime } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
 
 export default function Search() {
@@ -45,16 +45,47 @@ export default function Search() {
     const provider = usProviders[0]?.provider_name || "Unknown";
     const logoPath = usProviders[0]?.logo_path || null;
 
+    // Fetch runtime for TMDB items
+    let runtime = null;
+    if (item.type === "movie" || item.type === "tv") {
+      try {
+        const details = await getMediaDetails(item.type, item.id);
+        runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
+      } catch (error) {
+        console.error("Failed to fetch runtime:", error);
+      }
+    }
+
     await addWatchlistItem(user.uid, {
       tmdbId: item.id,
       title: item.title,
       type: item.type,
       poster: item.poster,
+      overview: item.overview,
       provider,
       logoPath,
+      runtime,
     });
 
     navigate("/");
+  };
+
+  const fetchYouTubeInfo = async (url) => {
+    try {
+      const response = await fetch(
+        `https://noembed.com/embed?url=${encodeURIComponent(url)}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          title: data.title,
+          duration: data.length_seconds || null,
+        };
+      }
+    } catch (e) {
+      console.error("Could not fetch YouTube info", e);
+    }
+    return { title: null, duration: null };
   };
 
   const isYouTubeUrl = (url) => {
@@ -66,27 +97,13 @@ export default function Search() {
     return match ? match[1] : null;
   };
 
-  const fetchYouTubeTitle = async (url) => {
-    try {
-      const response = await fetch(
-        `https://noembed.com/embed?url=${encodeURIComponent(url)}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        return data.title;
-      }
-    } catch (e) {
-      console.error("Could not fetch YouTube title", e);
-    }
-    return null;
-  };
-
   const handleManualAdd = async () => {
     if (!manualTitle) return;
 
     let provider = manualProvider;
     let title = manualTitle;
     let youtubeUrl = null;
+    let youtubeDuration = null;
 
     // If it's a YouTube URL, extract info
     if (isYouTubeUrl(manualTitle)) {
@@ -94,9 +111,10 @@ export default function Search() {
       if (videoId) {
         provider = "YouTube";
         youtubeUrl = manualTitle;
-        // Fetch actual video title
-        const videoTitle = await fetchYouTubeTitle(manualTitle);
-        title = videoTitle || videoId;
+        // Fetch video title and duration
+        const info = await fetchYouTubeInfo(manualTitle);
+        title = info.title || videoId;
+        youtubeDuration = info.duration;
       }
     }
 
@@ -107,6 +125,7 @@ export default function Search() {
       provider: provider || "Unknown",
       poster: null,
       url: youtubeUrl,
+      duration: youtubeDuration,
     });
 
     navigate("/");

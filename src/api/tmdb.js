@@ -18,7 +18,22 @@ export const getWatchProviders = async (type, id) => {
   return res.json();
 };
 
+export const getMediaDetails = async (type, id) => {
+  const res = await fetch(
+    `${BASE_URL}/${type}/${id}?api_key=${API_KEY}&append_to_response=external_ids`
+  );
+  if (!res.ok) throw new Error("Failed to fetch media details");
+  return res.json();
+};
+
 export const getImageUrl = (path) => {
   if (!path) return null;
   return `https://image.tmdb.org/t/p/w500${path}`;
+};
+
+export const formatRuntime = (minutes) => {
+  if (!minutes) return null;
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
 };
