@@ -20,6 +20,8 @@ const getProviderLogoUrl = (logoPath) => {
   if (!logoPath) return null;
   return `https://image.tmdb.org/t/p/w92${logoPath}`;
 };
+
+const getYouTubeThumbnail = (url) => {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
   if (match && match[1]) {
