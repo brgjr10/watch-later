@@ -134,7 +134,7 @@ export default function Watchlist() {
                     <img
                       src={getYouTubeThumbnail(item.url)}
                       alt="YouTube thumbnail"
-                      className="w-full h-full object-contain rounded-l-2xl"
+                      className="w-full h-full object-cover rounded-l-2xl"
                       onError={(e) => {
                         e.target.src = "https://via.placeholder.com/320x180?text=YT";
                       }}
