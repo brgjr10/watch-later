@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../services/watchlistService";
 import { getImageUrl } from "../api/tmdb";
-import { Check, X, Play, Plus, ExternalLink } from "lucide-react";
+import { Check, Play, Plus, ExternalLink } from "lucide-react";
 
 const getProviderIcon = (provider) => {
   const icons = {

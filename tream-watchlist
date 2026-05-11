@@ -1,0 +1,16 @@
+[33mcommit d3b3a688dd8cb68c829909da767f371b02c96fa1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: brgjr10 <brgjr10@gmail.com>
+Date:   Mon May 11 11:37:04 2026 -0400
+
+    feat(watchlist): tighten card spacing and thumbnail sizing
+    
+    - Reduce overall padding and gaps in watchlist cards for compact mobile layout
+    - YouTube thumbnails: w-28 h-16 → sm:w-32 sm:h-[72px]; placeholder 120×68
+    - Movie posters: w-16 h-24 → sm:w-20 sm:h-28
+    - Header margin and button padding reduced for tighter spacing
+    - Filter buttons: smaller padding (px-2 py-0.5), text-xs
+    - Provider/YouTube badges: logo w-4, badge text-[10px], reduced gap and margin
+    - Action buttons: px-1.5 py-0.5 text-[10px], min-w-[56px]
+
+ src/pages/Watchlist.jsx | 101 [32m+++++++++++++++++++++++++[m[31m-----------------------[m
+ 1 file changed, 53 insertions(+), 48 deletions(-)
