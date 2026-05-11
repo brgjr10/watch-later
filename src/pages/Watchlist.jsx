@@ -21,7 +21,7 @@ const getYouTubeThumbnail = (url) => {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
   }
   return null;
 };
@@ -128,15 +128,15 @@ export default function Watchlist() {
           <div key={item.id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20">
             <div className="flex">
               {/* Poster/Thumbnail */}
-              <div className="relative w-20 h-28 flex-shrink-0">
+              <div className="relative w-20 aspect-video flex-shrink-0">
                 {item.type === "youtube" ? (
                   <>
                     <img
                       src={getYouTubeThumbnail(item.url)}
                       alt="YouTube thumbnail"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-l-2xl"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/80x112?text=YT";
+                        e.target.src = "https://via.placeholder.com/320x180?text=YT";
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
@@ -149,10 +149,10 @@ export default function Watchlist() {
                   <img
                     src={getImageUrl(item.poster)}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-l-2xl"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-l-2xl">
                     <Bookmark className="w-6 h-6 text-gray-400" />
                   </div>
                 )}
