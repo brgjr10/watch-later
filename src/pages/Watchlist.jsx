@@ -83,17 +83,17 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
     <div className="group bg-slate-800 rounded-lg p-3 flex gap-3 items-center">
       <div className="relative flex-shrink-0">
         {item.type === "youtube" ? (
-          <div className="w-20 h-11 rounded overflow-hidden bg-slate-700">
+          <div className="w-28 h-16 rounded-md overflow-hidden bg-slate-700">
             <img
               src={getYouTubeThumbnail(item.url)}
               alt="YouTube thumbnail"
               className="w-full h-full object-cover"
               onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x45?text=YT";
+                e.target.src = "https://via.placeholder.com/112x64?text=YT";
               }}
             />
             {item.url && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Play className="w-4 h-4 text-white" fill="white" />
               </div>
             )}
@@ -103,7 +103,7 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
             <img
               src={getImageUrl(item.poster)}
               alt={item.title}
-              className="w-8 h-12 object-cover rounded"
+              className="w-10 h-14 object-cover rounded-md"
             />
           )
         )}
@@ -140,7 +140,7 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
               <img
                 src={getProviderLogoPath(item.provider)}
                 alt={item.provider}
-                style={{ width: 20, height: 20 }}
+                className="w-4 h-4"
               />
             ) : (
               <span className="text-xs">{getProviderIcon(item.provider)}</span>
@@ -153,7 +153,7 @@ const WatchlistItem = ({ item, onToggleWatched, onRemove }) => {
 
         {item.type === "youtube" && (
           <div className="flex items-center gap-1.5">
-            <img src="/providers/youtube.svg" alt="YouTube" style={{ width: 20, height: 20 }} />
+            <img src="/providers/youtube.svg" alt="YouTube" className="w-4 h-4" />
             <span className="inline-block px-1.5 py-0 text-xs rounded bg-red-500">
               YouTube
             </span>
