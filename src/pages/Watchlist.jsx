@@ -5,27 +5,6 @@ import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../ser
 import { getImageUrl } from "../api/tmdb";
 import { Check, X, Play, Plus, Bookmark, Clock } from "lucide-react";
 
-const getProviderLogoPath = (provider) => {
-  const paths = {
-    "Netflix": "/providers/netflix.svg",
-    "Disney+": "/providers/disneyplus.svg",
-    "Hulu": "/providers/hulu.svg",
-    "Amazon Prime Video": "/providers/amazonprime.svg",
-    "HBO Max": "/providers/hbomax.svg",
-    "YouTube": "/providers/youtube.svg",
-  };
-  return paths[provider] || null;
-};
-
-const getYouTubeThumbnail = (url) => {
-  if (!url) return null;
-  const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-  if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
-  }
-  return null;
-};
-
 const getProviderColor = (provider) => {
   const colors = {
     "Netflix": "bg-red-600",
@@ -198,26 +177,14 @@ export default function Watchlist() {
                   )}
 
                   {item.provider && item.type !== "youtube" && (
-                    <>
-                      {getProviderLogoPath(item.provider) ? (
-                        <img
-                          src={getProviderLogoPath(item.provider)}
-                          alt={item.provider}
-                          className="w-4 h-4"
-                        />
-                      ) : null}
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getProviderColor(item.provider)}`}>
-                        {item.provider}
-                      </span>
-                    </>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${getProviderColor(item.provider)}`}>
+                      {item.provider}
+                    </span>
                   )}
                   {item.type === "youtube" && (
-                    <div className="flex items-center gap-1.5">
-                      <img src="/providers/youtube.svg" alt="YouTube" className="w-4 h-4" />
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
-                        YouTube
-                      </span>
-                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
+                      YouTube
+                    </span>
                   )}
                 </div>
               </div>
