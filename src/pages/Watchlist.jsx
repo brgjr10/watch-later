@@ -149,20 +149,8 @@ export default function Watchlist() {
                      {item.provider}
                    </span>
                  </div>
-               )}
-               {item.type === "youtube" && (
-                 <div className="flex items-center gap-1 mt-1">
-                   <img
-                     src="/providers/youtube.svg"
-                     alt="YouTube"
-                     className="w-3 h-auto"
-                   />
-                   <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
-                     YouTube
-                   </span>
-                 </div>
-               )}
-             </div>
+            </div>
+            <div className="flex flex-col gap-1">
               )}
               {item.type === "youtube" && (
                 <div className="flex items-center gap-1 mt-1">
