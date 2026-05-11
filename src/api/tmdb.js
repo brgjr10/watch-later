@@ -35,10 +35,10 @@ export const getMediaDetails = async (type, id) => {
 export const getYouTubeVideoDetails = async (videoId) => {
   try {
     const res = await fetch(
-      `/api/youtube/videos?part=snippet,contentDetails&id=${videoId}`
+      `/api/youtube?videoId=${encodeURIComponent(videoId)}`
     );
     if (!res.ok) {
-      console.error("YouTube proxy error:", res.status, res.statusText);
+      console.error("YouTube API error:", res.status, res.statusText);
       return { title: null, duration: null };
     }
     const data = await res.json();
