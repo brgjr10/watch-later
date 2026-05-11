@@ -43,7 +43,7 @@ export default function Search() {
     const usProviders = providers.results?.US?.flatrate || [];
 
     const provider = usProviders[0]?.provider_name || "Unknown";
-    const providerLogo = usProviders[0]?.logo_path || null;
+    const logoPath = usProviders[0]?.logo_path || null;
 
     await addWatchlistItem(user.uid, {
       tmdbId: item.id,
@@ -51,7 +51,7 @@ export default function Search() {
       type: item.type,
       poster: item.poster,
       provider,
-      providerLogo,
+      logoPath,
     });
 
     navigate("/");

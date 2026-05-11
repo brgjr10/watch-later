@@ -16,9 +16,16 @@ const getProviderIcon = (provider) => {
   return icons[provider] || "📺";
 };
 
-const getProviderLogoUrl = (logoPath) => {
-  if (!logoPath) return null;
-  return `https://image.tmdb.org/t/p/w92${logoPath}`;
+const getProviderLogoPath = (provider) => {
+  const paths = {
+    "Netflix": "/providers/netflix.svg",
+    "Disney+": "/providers/disneyplus.svg",
+    "Hulu": "/providers/hulu.svg",
+    "Amazon Prime Video": "/providers/amazonprime.svg",
+    "HBO Max": "/providers/hbomax.svg",
+    "YouTube": "/providers/youtube.svg",
+  };
+  return paths[provider] || null;
 };
 
 const getYouTubeThumbnail = (url) => {
@@ -129,9 +136,9 @@ export default function Watchlist() {
               </p>
               {item.provider && item.type !== "youtube" && (
                 <div className="flex items-center gap-1 mt-1">
-                  {item.providerLogo ? (
+                  {getProviderLogoPath(item.provider) ? (
                     <img
-                      src={getProviderLogoUrl(item.providerLogo)}
+                      src={getProviderLogoPath(item.provider)}
                       alt={item.provider}
                       className="w-5 h-auto"
                     />
