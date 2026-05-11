@@ -75,23 +75,23 @@ export default function Watchlist() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">My Watchlist</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="flex justify-between items-center mb-2 sm:mb-3">
+        <h1 className="text-lg sm:text-xl font-bold">My Watchlist</h1>
         <Link
           to="/search"
-          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs sm:text-sm"
         >
           + Add
         </Link>
       </div>
 
-      <div className="flex gap-1 mb-3">
+      <div className="flex gap-1 mb-2">
         {["all", "unwatched", "watched"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-2 py-1 rounded text-sm ${
+            className={`px-2 py-0.5 rounded text-xs ${
               filter === f ? "bg-blue-600" : "bg-slate-700"
             }`}
           >
@@ -100,16 +100,16 @@ export default function Watchlist() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3 items-start">
+        <div className="grid grid-cols-1 gap-2">
+         {filteredItems.map((item) => (
+            <div key={item.id} className="bg-slate-800 rounded-lg p-2 sm:p-3 flex gap-2 sm:gap-3 items-start">
             {item.type === "youtube" ? (
-              <img
-                src={getYouTubeThumbnail(item.url)}
-                alt="YouTube thumbnail"
-                className="w-20 h-12 object-cover rounded"
+               <img
+                 src={getYouTubeThumbnail(item.url)}
+                 alt="YouTube thumbnail"
+                 className="w-28 h-16 sm:w-32 sm:h-[72px] object-cover rounded flex-shrink-0"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/80x45?text=YT";
+                  e.target.src = "https://via.placeholder.com/120x68?text=YT";
                 }}
               />
             ) : (
@@ -117,56 +117,61 @@ export default function Watchlist() {
                 <img
                   src={getImageUrl(item.poster)}
                   alt={item.title}
-                  className="w-12 h-18 object-cover rounded"
+                  className="w-16 h-24 sm:w-20 sm:h-28 object-cover rounded flex-shrink-0"
                 />
               )
             )}
             <div className="flex-1 min-w-0">
               {item.type === "youtube" && item.url ? (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:text-blue-300 break-words text-sm">
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-400 hover:text-blue-300 break-words text-sm leading-tight line-clamp-2"
+                >
                   {item.title}
                 </a>
               ) : item.type === "youtube" ? (
-                <h3 className="font-semibold text-sm">{item.title}</h3>
+                <h3 className="font-semibold text-sm leading-tight line-clamp-2">{item.title}</h3>
               ) : (
-                <h3 className="font-semibold truncate text-sm">{item.title}</h3>
+                <h3 className="font-semibold truncate text-sm leading-tight">{item.title}</h3>
               )}
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 mt-0.5">
                 {item.type === "tv" ? "TV" : item.type === "youtube" ? "YouTube" : "Movie"}
               </p>
-              {item.provider && item.type !== "youtube" && (
-                <div className="flex items-center gap-1 mt-1">
-                  {getProviderLogoPath(item.provider) ? (
+               {item.provider && item.type !== "youtube" && (
+                 <div className="flex items-center gap-1 mt-0.5">
+                   {getProviderLogoPath(item.provider) ? (
+                     <img
+                       src={getProviderLogoPath(item.provider)}
+                       alt={item.provider}
+                       className="w-4 h-auto"
+                     />
+                   ) : (
+                     <span className="text-xs">{getProviderIcon(item.provider)}</span>
+                   )}
+                   <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded ${getProviderColor(item.provider)}`}>
+                     {item.provider}
+                   </span>
+                 </div>
+               )}
+                {item.type === "youtube" && (
+                  <div className="flex items-center gap-1 mt-0.5">
                     <img
-                      src={getProviderLogoPath(item.provider)}
-                      alt={item.provider}
-                      className="w-5 h-auto"
+                      src="/providers/youtube.svg"
+                      alt="YouTube"
+                      className="w-4 h-auto"
                     />
-                  ) : (
-                    <span className="text-sm">{getProviderIcon(item.provider)}</span>
-                  )}
-                  <span className={`inline-block px-2 py-0.5 text-xs rounded ${getProviderColor(item.provider)}`}>
-                    {item.provider}
-                  </span>
-                </div>
-              )}
-              {item.type === "youtube" && (
-                <div className="flex items-center gap-1 mt-1">
-                  <img
-                    src="/providers/youtube.svg"
-                    alt="YouTube"
-                    className="w-5 h-auto"
-                  />
-                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-500">
-                    YouTube
-                  </span>
-                </div>
-              )}
+                    <span className="inline-block px-1.5 py-0.5 text-[10px] rounded bg-red-500">
+                      YouTube
+                    </span>
+                  </div>
+                )}
             </div>
-            <div className="flex flex-col gap-1">
+             <div className="flex flex-col gap-1 min-w-[56px]">
               <button
                 onClick={() => handleToggleWatched(item.id, item.watched)}
-                className={`px-3 py-1 text-xs rounded w-full ${
+                className={`px-1.5 py-0.5 text-[10px] rounded w-full ${
                   item.watched ? "bg-green-600" : "bg-slate-600"
                 }`}
               >
@@ -174,7 +179,7 @@ export default function Watchlist() {
               </button>
               <button
                 onClick={() => handleRemove(item.id)}
-                className="px-3 py-1 text-xs bg-red-600 rounded w-full"
+                className="px-1.5 py-0.5 text-[10px] bg-red-600 rounded w-full"
               >
                 ×
               </button>
