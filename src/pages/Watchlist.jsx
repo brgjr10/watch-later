@@ -21,7 +21,7 @@ const getYouTubeThumbnail = (url) => {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
   }
   return null;
 };
@@ -136,7 +136,7 @@ export default function Watchlist() {
                       alt="YouTube thumbnail"
                       className="w-full h-full object-cover rounded-l-2xl"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/320x180?text=YT";
+                        e.target.src = "https://via.placeholder.com/640x360?text=YT";
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
