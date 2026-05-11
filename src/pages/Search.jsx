@@ -135,36 +135,36 @@ export default function Search() {
           </div>
         </>
       ) : (
-<div className="flex flex-col gap-3 max-w-sm mx-auto">
-            <input
-              type="text"
-              placeholder="Title"
-              value={manualTitle}
-              onChange={(e) => setManualTitle(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="Provider (e.g., Netflix, Hulu)"
-              value={manualProvider}
-              onChange={(e) => setManualProvider(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 rounded-lg"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleManualAdd}
-                className="flex-1 px-4 py-2 bg-blue-600 rounded-lg"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setManualMode(false)}
-                className="px-4 py-2 bg-slate-700 rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
+        <div className="flex flex-col gap-3 max-w-sm mx-auto">
+          <input
+            type="text"
+            placeholder="Title"
+            value={manualTitle}
+            onChange={(e) => setManualTitle(e.target.value)}
+            className="w-full px-4 py-2 bg-slate-800 rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Provider (e.g., Netflix, Hulu)"
+            value={manualProvider}
+            onChange={(e) => setManualProvider(e.target.value)}
+            className="w-full px-4 py-2 bg-slate-800 rounded-lg"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleManualAdd}
+              className="flex-1 px-4 py-2 bg-blue-600 rounded-lg"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => setManualMode(false)}
+              className="px-4 py-2 bg-slate-700 rounded-lg"
+            >
+              Cancel
+            </button>
           </div>
+        </div>
       )}
     </div>
   );
