@@ -30,7 +30,7 @@ const getProviderLogoPath = (provider) => {
 
 const getYouTubeThumbnail = (url) => {
   if (!url) return null;
-  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  const match = url.match(/(?:youtube\.com\/(?:[^/]+/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (match && match[1]) {
     return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
   }
