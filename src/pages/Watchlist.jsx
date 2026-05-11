@@ -5,6 +5,15 @@ import { subscribeToWatchlist, toggleWatched, removeWatchlistItem } from "../ser
 import { getImageUrl } from "../api/tmdb";
 import { Check, X, Play, Plus, Bookmark, Clock } from "lucide-react";
 
+const getYouTubeThumbnail = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+  }
+  return null;
+};
+
 const getProviderColor = (provider) => {
   const colors = {
     "Netflix": "bg-red-600",
