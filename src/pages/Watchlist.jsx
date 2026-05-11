@@ -103,31 +103,31 @@ export default function Watchlist() {
       <div className="grid grid-cols-1 gap-3">
         {filteredItems.map((item) => (
           <div key={item.id} className="bg-slate-800 rounded-lg p-3 flex gap-3">
-            {item.type === "youtube" ? (
-              <img
-                src={getYouTubeThumbnail(item.url)}
-                alt="YouTube thumbnail"
-                className="w-24 h-16 object-cover rounded"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/96x64?text=YT";
-                }}
-              />
-            ) : (
-              item.poster && (
+{item.type === "youtube" ? (
                 <img
-                src={getImageUrl(item.poster)}
-                alt={item.title}
-                className="w-16 h-24 object-cover rounded"
-              />
-              )
-            )}
+                  src={item.url ? getYouTubeThumbnail(item.url) : "https://via.placeholder.com/96x64?text=YT"}
+                  alt="YouTube thumbnail"
+                  className="w-24 h-16 object-cover rounded"
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/96x64?text=YT";
+                  }}
+                />
+              ) : (
+                item.poster && (
+                  <img
+                    src={getImageUrl(item.poster)}
+                    alt={item.title}
+                    className="w-16 h-24 object-cover rounded"
+                  />
+                )
+              )}
             <div className="flex-1 min-w-0">
               {item.type === "youtube" && item.url ? (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold truncate text-blue-400 hover:text-blue-300">
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:text-blue-300 break-words">
                   {item.title}
                 </a>
               ) : item.type === "youtube" ? (
-                <h3 className="font-semibold truncate">{item.title}</h3>
+                <h3 className="font-semibold">{item.title}</h3>
               ) : (
                 <h3 className="font-semibold truncate">{item.title}</h3>
               )}
