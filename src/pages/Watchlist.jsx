@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   getImageUrl,
-  getRecommendations,
-  getYouTubeVideoDetails,
 } from "../api/tmdb";
 import {
   subscribeToWatchlist,
@@ -12,7 +10,6 @@ import {
   removeWatchlistItem as removeWatchlistItemService,
   updateWatchlistItem,
 } from "../services/watchlistService";
-import RecommendationSection from "../components/recommendations";
 import {
   Check,
   X,
@@ -572,8 +569,6 @@ export default function Watchlist() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
-  const [recommendations, setRecommendations] = useState([]);
-  const [fetchingRecommendations, setFetchingRecommendations] = useState(false);
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -646,50 +641,6 @@ export default function Watchlist() {
       return next;
     });
   }, []);
-
-  const watchedItems = useMemo(
-    () => items.filter((i) => i.watched),
-    [items]
-  );
-
-  const fetchRecommendations = useCallback(async () => {
-    if (!watchedItems.length) return;
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    setFetchingRecommendations(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
-        // Pick 3 random watched items
-        const shuffled = unique.sort(() => Math.random() - 0.5);
-        const pick = shuffled.slice(0, 3);
-        const recs = [];
-        for (const item of pick) {
-          try {
-            const data = await getRecommendations(item.type === "youtube" ? "movie" : item.type, item.tmdbId);
-            if (data.results) {
-              recs.push(...data.results.slice(0, 4));
-            }
-          } catch (e) {
-            console.error("Failed to get recommendations for", item.title, e);
-          }
-        }
-        const seen = new Set();
-        const uniqueRecs = recs.filter((r) => {
-          const key = r.id + r.media_type;
-          if (seen.has(key) || r.media_type === "person") return false;
-          seen.add(key);
-          return true;
-        });
-        setRecommendations(uniqueRecs.slice(0, 10));
-      } catch (err) {
-        console.error("Failed to fetch recommendations:", err);
-      } finally {
-        setFetchingRecommendations(false);
-      }
-    }, 300);
-  }, [watchedItems]);
 
   // Filter, search, and sort items
   const filteredItems = useMemo(() => {
@@ -951,15 +902,6 @@ export default function Watchlist() {
         </div>
       </header>
 
-      {watchedItems.length > 0 && (
-        <RecommendationSection
-          watchedItems={watchedItems}
-          recommendations={recommendations}
-          onFetchRecommendations={fetchRecommendations}
-          onHide={() => setRecommendations([])}
-          fetching={fetchingRecommendations}
-        />
-      )}
       {/* Content */}
       {loading ? (
         <div
