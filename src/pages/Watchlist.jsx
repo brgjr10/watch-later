@@ -43,10 +43,11 @@ const extractYouTubeId = (url) => {
     }
     const pathMatch = urlObj.pathname.match(/\/(embed|v|shorts|live)\/([^/?]+)/);
     if (pathMatch) videoId = pathMatch[2];
-    if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) return videoId;
+    // YouTube video IDs are typically 11 chars but can be 10-12
+    if (videoId && /^[a-zA-Z0-9_-]{10,12}$/.test(videoId)) return videoId;
     return null;
   } catch {
-    const match = url.match(/(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    const match = url.match(/(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{10,12})/);
     return match ? match[1] : null;
   }
 };
@@ -339,7 +340,7 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               </>
             ) : (
               <>
-                <EyeOff className="w-3 h-3" /> Want to Watch
+                <EyeOff className="w-3 h-3" />
               </>
             )}
           </button>
@@ -447,7 +448,7 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
                     </>
                   ) : (
                     <>
-                      <EyeOff className="w-4 h-4" /> Watch
+                      <EyeOff className="w-4 h-4" />
                     </>
                   )}
                 </button>
