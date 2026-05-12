@@ -209,7 +209,7 @@ export default function RecommendationsPage() {
         await addWatchlistItem(user.uid, {
           tmdbId: item.id,
           title: item.title || item.name,
-          type: item.media_type === "tv" ? "tv" : "movie",
+          type: item.media_type, // "movie", "tv", etc.
           poster: item.poster_path ?? null,
           overview: item.overview ?? null,
           provider,
