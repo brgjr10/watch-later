@@ -30,13 +30,31 @@ import {
   Book,
 } from "lucide-react";
 
-const getYouTubeThumbnail = (url, quality = "hqdefault") => {
+const extractYouTubeId = (url) => {
   if (!url) return null;
-  const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-  if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/${quality}.jpg`;
+  try {
+    const urlObj = new URL(url);
+    let videoId = null;
+    if (urlObj.searchParams.has("v")) {
+      videoId = urlObj.searchParams.get("v");
+    }
+    if (urlObj.hostname === "youtu.be") {
+      videoId = urlObj.pathname.slice(1);
+    }
+    const pathMatch = urlObj.pathname.match(/\/(embed|v|shorts|live)\/([^/?]+)/);
+    if (pathMatch) videoId = pathMatch[2];
+    if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) return videoId;
+    return null;
+  } catch {
+    const match = url.match(/(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
   }
-  return null;
+};
+
+const getYouTubeThumbnail = (url) => {
+  const videoId = extractYouTubeId(url);
+  if (!videoId) return "";
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 };
 
 const getProviderColor = (provider) => {
@@ -176,7 +194,7 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
             <>
               <img
                 src={getYouTubeThumbnail(item.url)}
-                alt={item.title}
+                alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
                 className="w-full h-full object-cover rounded-l-2xl"
                 onError={(e) => {
                   const parent = e.target.parentElement;
@@ -227,7 +245,7 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
                 onClick={(e) => isSelectionMode && e.preventDefault()}
                 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
               >
-                {item.title}
+                {item.title && item.title.startsWith("http") ? "YouTube Video" : item.title}
               </a>
             ) : (
               <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
@@ -381,7 +399,7 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
           <>
             <img
               src={getYouTubeThumbnail(item.url)}
-              alt={item.title}
+              alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
               className="w-full aspect-[2/3] object-cover"
               onError={(e) => {
                 e.target.classList.add("hidden");
@@ -390,7 +408,7 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               }}
             />
             <div
-              className="absolute inset-0 bg-gray-300 dark:bg-gray-800 items-center justify-center hidden"
+              className="absolute inset-0 bg-gray-300 dark:bg-gray-800 flex items-center justify-center hidden"
             >
               <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
             </div>
@@ -462,7 +480,7 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
 
       <div className="p-3">
         <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
-          {item.title}
+          {item.title && item.title.startsWith("http") ? "YouTube Video" : item.title}
         </h3>
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           <span className="text-[10px] text-gray-500 dark:text-gray-400">
@@ -478,6 +496,11 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
             </span>
           )}
         </div>
+        {item.note && (
+          <p className="text-[10px] text-indigo-400 dark:text-indigo-300 mt-1 italic truncate">
+            📝 {item.note}
+          </p>
+        )}
       </div>
     </div>
   );

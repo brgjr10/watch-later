@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import { getWatchProviders, getMediaDetails, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
-import { Loader2, RefreshCw, Film } from "lucide-react";
+import { Loader2, RefreshCw, Film, Plus, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function RecommendationSection({
   watchedItems,
@@ -13,6 +14,7 @@ export default function RecommendationSection({
 }) {
   const { user } = useAuth();
   const [addingStates, setAddingStates] = useState({});
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const handleAdd = useCallback(
     async (item) => {
@@ -69,6 +71,16 @@ export default function RecommendationSection({
 
   const isAdding = (id) => !!addingStates[id];
 
+  const showMore = () => {
+    setVisibleCount((prev) => Math.min(prev + 5, recommendations.length));
+  };
+
+  const showLess = () => {
+    setVisibleCount(5);
+  };
+
+  const visibleRecs = recommendations.slice(0, visibleCount);
+
   return (
     <div className="mt-10 animate-fade-in">
       {watchedItems.length > 0 && recommendations.length === 0 && (
@@ -90,12 +102,20 @@ export default function RecommendationSection({
 
       {recommendations.length > 0 && (
         <>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Film className="w-5 h-5 text-indigo-500" />
-            Recommended For You
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Film className="w-5 h-5 text-indigo-500" />
+              Recommended For You
+            </h2>
+            <button
+              onClick={onHide}
+              className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              Hide
+            </button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {recommendations.map((item) => (
+            {visibleRecs.map((item) => (
               <button
                 key={`rec-${item.id}`}
                 onClick={() => handleAdd(item)}
@@ -137,12 +157,33 @@ export default function RecommendationSection({
               </button>
             ))}
           </div>
-          <button
-            onClick={onHide}
-            className="mt-4 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            Hide recommendations
-          </button>
+          {visibleRecs.length < recommendations.length && (
+            <button
+              onClick={showMore}
+              className="mt-6 flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors mx-auto"
+            >
+              View More ({recommendations.length - visibleRecs.length} more)
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          )}
+          {visibleRecs.length > 5 && visibleRecs.length === recommendations.length && (
+            <button
+              onClick={showLess}
+              className="mt-4 flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mx-auto"
+            >
+              Show Less
+              <ChevronUp className="w-4 h-4" />
+            </button>
+          )}
+
+          <div className="text-center mt-4">
+            <Link
+              to="/recommendations"
+              className="text-sm text-indigo-400 dark:text-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 mx-auto"
+            >
+              See All Recommendations <Plus className="w-3 h-3" />
+            </Link>
+          </div>
         </>
       )}
     </div>

@@ -353,14 +353,20 @@ export default function Search() {
       setAddingStates((prev) => ({ ...prev, manual: true }));
       setError(null);
       try {
-        const youtubeIdMatch = manualItem.url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-        let youtubeDuration = null;
+        let videoId = null;
+        if (manualItem.type === "youtube") {
+          const match = manualItem.url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+          videoId = match ? match[1] : null;
+        }
 
-        if (manualItem.type === "youtube" && youtubeIdMatch) {
+        let youtubeDuration = null;
+        let videoTitle = manualItem.title;
+
+        if (manualItem.type === "youtube" && videoId) {
           try {
-            const details = await getYouTubeVideoDetails(youtubeIdMatch[1]);
+            const details = await getYouTubeVideoDetails(videoId);
             youtubeDuration = details.duration || null;
-            manualItem.title = details.title || manualItem.title;
+            if (details.title) videoTitle = details.title;
           } catch (err) {
             console.error("YouTube details fetch failed:", err);
           }
@@ -368,7 +374,7 @@ export default function Search() {
 
         await addWatchlistItem(user.uid, {
           tmdbId: Date.now(),
-          title: manualItem.title,
+          title: videoTitle,
           type: manualItem.type,
           provider: manualItem.type === "youtube" ? "YouTube" : manualItem.provider || "Unknown",
           poster: null,

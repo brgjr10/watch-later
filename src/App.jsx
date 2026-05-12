@@ -6,7 +6,8 @@ import { auth } from "./firebase/config";
 import Login from "./pages/Login";
 import Watchlist from "./pages/Watchlist";
 import Search from "./pages/Search";
-import { LogOut, Plus, Bookmark } from "lucide-react";
+import Recommendations from "./pages/Recommendations";
+import { LogOut, Plus, Bookmark, Film as FilmIcon } from "lucide-react";
 
 function NavLink({ to, label, icon }) {
   const { pathname } = useLocation();
@@ -64,6 +65,7 @@ function NavigationBar({ user }) {
               <>
                 <NavLink to="/" label="Watchlist" icon={<Bookmark className="w-4 h-4" />} />
                 <NavLink to="/search" label="Discover" icon={<Plus className="w-4 h-4" />} />
+<NavLink to="/recommendations" label="Recs" icon={<FilmIcon className="w-4 h-4" />} />
               </>
             )}
             {user && (
@@ -98,6 +100,10 @@ function App() {
           <Route
             path="/search"
             element={user ? <Search /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/recommendations"
+            element={user ? <Recommendations /> : <Navigate to="/login" />}
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
