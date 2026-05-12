@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getRecommendations, getWatchProviders, getMediaDetails, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
