@@ -77,54 +77,60 @@ export default function RecommendationsPage() {
   // Auto-fetch recommendations after watched items are loaded
   const initialFetchRef = useRef(false);
 
-  const fetchRecommendations = useCallback(async () => {
-    if (!watchedItems.length) return;
-    if (fetchRecommendationsRef.current) {
-      clearTimeout(fetchRecommendationsRef.current);
-    }
-    setFetching(true);
-    fetchRecommendationsRef.current = setTimeout(async () => {
-      try {
-        const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
-        const shuffled = [...unique];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        const pick = shuffled.slice(0, 3);
-        const recs = [];
-        for (const item of pick) {
-          try {
-            const data = await getRecommendations(
-              item.type === "youtube" ? "movie" : item.type,
-              item.tmdbId
-            );
-            if (data.results) {
-              recs.push(...data.results.slice(0, 4));
-            }
-          } catch (e) {
-            console.error("Failed to get recommendations for", item.title, e);
-          }
-        }
-        const seen = new Set();
-        const uniqueRecs = recs.filter((r) => {
-          const key = r.id + r.media_type;
-          if (seen.has(key) || r.media_type === "person") return false;
-          seen.add(key);
-          return true;
-        });
-        setRecommendations((prev) => {
-          const merged = [...prev, ...uniqueRecs];
-          const deduped = [...new Map(merged.map((r) => [r.id + r.media_type, r])).values()];
-          return deduped;
-        });
-      } catch (err) {
-        console.error("Failed to fetch recommendations:", err);
-      } finally {
-        setFetching(false);
-      }
-    }, 200);
-  }, [watchedItems]);
+   const fetchRecommendations = useCallback(async () => {
+     if (!watchedItems.length) return;
+     if (fetchRecommendationsRef.current) {
+       clearTimeout(fetchRecommendationsRef.current);
+     }
+     setFetching(true);
+     fetchRecommendationsRef.current = setTimeout(async () => {
+       try {
+         const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
+         const shuffled = [...unique];
+         for (let i = shuffled.length - 1; i > 0; i--) {
+           const j = Math.floor(Math.random() * (i + 1));
+           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+         }
+         const pick = shuffled.slice(0, 3);
+         const recs = [];
+         for (const item of pick) {
+           try {
+             const data = await getRecommendations(
+               item.type === "youtube" ? "movie" : item.type,
+               item.tmdbId
+             );
+             if (data.results) {
+               recs.push(...data.results.slice(0, 4));
+             }
+           } catch (e) {
+             console.error("Failed to get recommendations for", item.title, e);
+           }
+         }
+         const seen = new Set();
+         const uniqueRecs = recs.filter((r) => {
+           const key = r.id + r.media_type;
+           if (seen.has(key) || r.media_type === "person") return false;
+           seen.add(key);
+           return true;
+         });
+         // Filter out items already in watchlist (watched or unwatched)
+         const watchedIds = new Set(watchedItems.map((i) => `${i.tmdbId}_${i.type}`));
+         const filteredRecs = uniqueRecs.filter((r) => {
+           const recKey = `${r.id}_${r.media_type}`;
+           return !watchedIds.has(recKey);
+         });
+         setRecommendations((prev) => {
+           const merged = [...prev, ...filteredRecs];
+           const deduped = [...new Map(merged.map((r) => [r.id + r.media_type, r])).values()];
+           return deduped;
+         });
+       } catch (err) {
+         console.error("Failed to fetch recommendations:", err);
+       } finally {
+         setFetching(false);
+       }
+     }, 200);
+   }, [watchedItems]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -223,15 +229,21 @@ export default function RecommendationsPage() {
     [user]
   );
 
-  const showMore = () => {
-    setVisibleCount((prev) => prev + 10);
-  };
+   const showMore = useCallback(() => {
+     // If all loaded recommendations are already visible, fetch more
+     if (visibleCount >= recommendations.length) {
+       fetchRecommendations();
+     } else {
+       // Otherwise just show more of the current list
+       setVisibleCount((prev) => Math.min(prev + 10, recommendations.length));
+     }
+   }, [visibleCount, recommendations.length, fetchRecommendations]);
 
-  const showLess = () => {
-    setVisibleCount(10);
-  };
+   const showLess = () => {
+     setVisibleCount(10);
+   };
 
-  const visibleRecs = recommendations.slice(0, visibleCount);
+   const visibleRecs = useMemo(() => recommendations.slice(0, visibleCount), [recommendations, visibleCount]);
 
   return (
     <div className="pb-20">
@@ -302,42 +314,57 @@ export default function RecommendationsPage() {
                 />
               ))}
             </div>
-          </div>
+           </div>
 
-          {visibleRecs.length < recommendations.length && (
-            <button
-              onClick={showMore}
-              className="mt-6 flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors mx-auto"
-            >
-              View More ({recommendations.length - visibleRecs.length} more)
-              <ChevronDown className="w-4 h-4" />
-            </button>
-          )}
-          {visibleRecs.length > 10 && visibleRecs.length === recommendations.length && (
-            <button
-              onClick={showLess}
-              className="mt-4 flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mx-auto"
-            >
-              Show Less
-              <ChevronUp className="w-4 h-4" />
-            </button>
-          )}
+           {/* Unified Show More / Fetch More button */}
+           {recommendations.length > 0 && (
+             <div className="mt-6 flex justify-center">
+               {visibleCount < recommendations.length ? (
+                 <button
+                   onClick={showMore}
+                   className="flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                 >
+                   View More ({recommendations.length - visibleCount} more)
+                   <ChevronDown className="w-4 h-4" />
+                 </button>
+               ) : (
+                 <button
+                   onClick={showMore}
+                   disabled={fetching}
+                   className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all disabled:opacity-70"
+                 >
+                   {fetching ? (
+                     <Loader2 className="w-4 h-4 animate-spin" />
+                   ) : (
+                     <Plus className="w-4 h-4" />
+                   )}
+                   {fetching ? "Fetching..." : "Get More Recommendations"}
+                 </button>
+               )}
+             </div>
+           )}
 
-          {/* Fetch More */}
-          <div className="text-center mt-8">
-            <button
-              onClick={fetchRecommendations}
-              disabled={fetching}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all mx-auto disabled:opacity-70"
-            >
-              {fetching ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              {fetching ? "Fetching..." : "Get More Recommendations"}
-            </button>
-          </div>
+           {/* Show Less button */}
+           {visibleCount > 10 && visibleCount < recommendations.length && (
+             <div className="mt-4 flex justify-center">
+               <button
+                 onClick={showLess}
+                 className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+               >
+                 Show Less
+                 <ChevronUp className="w-4 h-4" />
+               </button>
+             </div>
+           )}
+
+           <div className="text-center mt-4">
+             <Link
+               to="/recommendations"
+               className="text-sm text-indigo-400 dark:text-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 mx-auto"
+             >
+               See All Recommendations <Plus className="w-3 h-3" />
+             </Link>
+           </div>
         </>
       )}
     </div>
