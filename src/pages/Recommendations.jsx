@@ -229,21 +229,17 @@ export default function RecommendationsPage() {
     [user]
   );
 
-   const showMore = useCallback(() => {
-     // If all loaded recommendations are already visible, fetch more
-     if (visibleCount >= recommendations.length) {
-       fetchRecommendations();
-     } else {
-       // Otherwise just show more of the current list
-       setVisibleCount((prev) => Math.min(prev + 10, recommendations.length));
-     }
-   }, [visibleCount, recommendations.length, fetchRecommendations]);
+    const showMore = useCallback(() => {
+      // If all loaded recommendations are already visible, fetch more
+      if (visibleCount >= recommendations.length) {
+        fetchRecommendations();
+      } else {
+        // Otherwise just show more of the current list
+        setVisibleCount((prev) => Math.min(prev + 10, recommendations.length));
+      }
+    }, [visibleCount, recommendations.length, fetchRecommendations]);
 
-   const showLess = () => {
-     setVisibleCount(10);
-   };
-
-   const visibleRecs = useMemo(() => recommendations.slice(0, visibleCount), [recommendations, visibleCount]);
+    const visibleRecs = useMemo(() => recommendations.slice(0, visibleCount), [recommendations, visibleCount]);
 
   return (
     <div className="pb-20">
@@ -314,57 +310,35 @@ export default function RecommendationsPage() {
                 />
               ))}
             </div>
-           </div>
+            </div>
 
-           {/* Unified Show More / Fetch More button */}
-           {recommendations.length > 0 && (
-             <div className="mt-6 flex justify-center">
-               {visibleCount < recommendations.length ? (
-                 <button
-                   onClick={showMore}
-                   className="flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
-                 >
-                   View More ({recommendations.length - visibleCount} more)
-                   <ChevronDown className="w-4 h-4" />
-                 </button>
-               ) : (
-                 <button
-                   onClick={showMore}
-                   disabled={fetching}
-                   className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all disabled:opacity-70"
-                 >
-                   {fetching ? (
-                     <Loader2 className="w-4 h-4 animate-spin" />
-                   ) : (
-                     <Plus className="w-4 h-4" />
-                   )}
-                   {fetching ? "Fetching..." : "Get More Recommendations"}
-                 </button>
-               )}
-             </div>
-           )}
-
-           {/* Show Less button */}
-           {visibleCount > 10 && visibleCount < recommendations.length && (
-             <div className="mt-4 flex justify-center">
-               <button
-                 onClick={showLess}
-                 className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-               >
-                 Show Less
-                 <ChevronUp className="w-4 h-4" />
-               </button>
-             </div>
-           )}
-
-           <div className="text-center mt-4">
-             <Link
-               to="/recommendations"
-               className="text-sm text-indigo-400 dark:text-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 mx-auto"
-             >
-               See All Recommendations <Plus className="w-3 h-3" />
-             </Link>
-           </div>
+            {/* Infinite scroll button */}
+            {recommendations.length > 0 && (
+              <div className="mt-6 flex justify-center">
+                {visibleCount < recommendations.length ? (
+                  <button
+                    onClick={showMore}
+                    className="flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                  >
+                    View More ({recommendations.length - visibleCount} more)
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={showMore}
+                    disabled={fetching}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all disabled:opacity-70"
+                  >
+                    {fetching ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4" />
+                    )}
+                    {fetching ? "Fetching..." : "Add More Recommendations"}
+                  </button>
+                )}
+              </div>
+            )}
         </>
       )}
     </div>
