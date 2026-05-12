@@ -32,29 +32,28 @@ import {
 
 const extractYouTubeId = (url) => {
   if (!url) return null;
-  try {
-    const urlObj = new URL(url);
-    let videoId = null;
-    if (urlObj.searchParams.has("v")) {
-      videoId = urlObj.searchParams.get("v");
-    }
-    if (urlObj.hostname === "youtu.be") {
-      videoId = urlObj.pathname.slice(1);
-    }
-    const pathMatch = urlObj.pathname.match(/\/(embed|v|shorts|live)\/([^/?]+)/);
-    if (pathMatch) videoId = pathMatch[2];
-    // YouTube video IDs are typically 11 chars but can be 10-12
-    if (videoId && /^[a-zA-Z0-9_-]{10,12}$/.test(videoId)) return videoId;
-    return null;
-  } catch {
-    const match = url.match(/(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{10,12})/);
-    return match ? match[1] : null;
+  // Ensure we're working with a string
+  const str = String(url);
+  // Try common YouTube URL patterns
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{10,12})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{10,12})/,
+    /\/embed\/([a-zA-Z0-9_-]{10,12})/,
+    /\/shorts\/([a-zA-Z0-9_-]{10,12})/,
+    /\/live\/([a-zA-Z0-9_-]{10,12})/,
+    // youtu.be without path separator (e.g., youtu.be/dQw4w9WgXcQ)
+    /youtu\.be\.{0,3}([a-zA-Z0-9_-]{10,12})/,
+  ];
+  for (const p of patterns) {
+    const m = str.match(p);
+    if (m && m[1]) return m[1];
   }
+  return null;
 };
 
 const getYouTubeThumbnail = (url) => {
   const videoId = extractYouTubeId(url);
-  if (!videoId) return "";
+  if (!videoId) return null;
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 };
 
@@ -70,6 +69,15 @@ const getProviderColor = (provider) => {
     Peacock: "bg-teal-500",
   };
   return colors[provider] || "bg-slate-600";
+};
+
+const normalizeYouTubeTitle = (title) => {
+  if (!title) return null;
+  // If the title is a URL (starts with http or contains youtube domain), return null so fallback is used
+  if (/^https?:\/\//.test(title) || title.includes("youtube.com") || title.includes("youtu.be")) {
+    return null;
+  }
+  return title;
 };
 
 const formatDuration = (seconds) => {
@@ -193,17 +201,23 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
         <div className="relative flex-shrink-0 w-20 h-28 sm:w-24 sm:h-36">
           {item.type === "youtube" ? (
             <>
-              <img
-                src={getYouTubeThumbnail(item.url)}
-                alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
-                className="w-full h-full object-cover rounded-l-2xl"
-                onError={(e) => {
-                  const parent = e.target.parentElement;
-                  const fb = parent?.querySelector(".youtube-fallback");
-                  if (fb) fb.classList.remove("hidden");
-                  e.target.classList.add("hidden");
-                }}
-              />
+              {getYouTubeThumbnail(item.url) ? (
+                <img
+                  src={getYouTubeThumbnail(item.url)}
+                  alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
+                  className="w-full h-full object-cover rounded-l-2xl"
+                  onError={(e) => {
+                    const parent = e.target.parentElement;
+                    const fb = parent?.querySelector(".youtube-fallback");
+                    if (fb) fb.classList.remove("hidden");
+                    e.target.classList.add("hidden");
+                  }}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                </div>
+              )}
               <div
                 className="hidden absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex items-center justify-center youtube-fallback"
               >
@@ -239,14 +253,14 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
         <div className="flex-1 p-3 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             {item.type === "youtube" && item.url ? (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => isSelectionMode && e.preventDefault()}
-                className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
+<a
+                 href={item.url}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 onClick={(e) => isSelectionMode && e.preventDefault()}
+                 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
               >
-                {item.title && item.title.startsWith("http") ? "YouTube Video" : item.title}
+                 {normalizeYouTubeTitle(item.title) || "YouTube Video"}
               </a>
             ) : (
               <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
@@ -398,16 +412,22 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
 
         {item.type === "youtube" ? (
           <>
-            <img
-              src={getYouTubeThumbnail(item.url)}
-              alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
-              className="w-full aspect-[2/3] object-cover"
-              onError={(e) => {
-                e.target.classList.add("hidden");
-                const fb = e.target.nextElementSibling;
-                if (fb) fb.classList.remove("hidden");
-              }}
-            />
+            {getYouTubeThumbnail(item.url) ? (
+              <img
+                src={getYouTubeThumbnail(item.url)}
+                alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
+                className="w-full aspect-[2/3] object-cover"
+                onError={(e) => {
+                  e.target.classList.add("hidden");
+                  const fb = e.target.nextElementSibling;
+                  if (fb) fb.classList.remove("hidden");
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gray-300 dark:bg-gray-800 flex items-center justify-center">
+                <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+              </div>
+            )}
             <div
               className="absolute inset-0 bg-gray-300 dark:bg-gray-800 flex items-center justify-center hidden"
             >
@@ -480,9 +500,9 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
       </div>
 
       <div className="p-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
-          {item.title && item.title.startsWith("http") ? "YouTube Video" : item.title}
-        </h3>
+<h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+           {normalizeYouTubeTitle(item.title) || "YouTube Video"}
+         </h3>
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           <span className="text-[10px] text-gray-500 dark:text-gray-400">
             {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
@@ -955,15 +975,7 @@ export default function Watchlist() {
           fetching={fetchingRecommendations}
         />
       )}
-
-      {/* Add FAB */}
-      <Link
-        to="/search"
-        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/40 active:scale-90 transition-all duration-200 z-40 no-underline"
-        title="Add new title"
-      >
-        <Plus className="w-6 h-6 text-white" />
-      </Link>
+       );
     </div>
   );
 }

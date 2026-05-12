@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { getRecommendations, getWatchProviders, getMediaDetails, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Film, Plus, ArrowLeft, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Loader2, Film, Plus, ArrowLeft, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { getDocs, collection, query, where, orderBy } from "firebase/firestore";
 import { db } from "../firebase/config";
 
@@ -59,7 +59,7 @@ export default function RecommendationsPage() {
   const [recommendations, setRecommendations] = useState([]);
   const [addingStates, setAddingStates] = useState({});
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(false);
+const [fetching, setFetching] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
 
   // Fetch watched items directly for computing recommendations
@@ -71,41 +71,6 @@ export default function RecommendationsPage() {
       return;
     }
   }, [user, navigate]);
-
-  // We import subscribeToWatchlist and toggleWatched here
-  // Actually let's use the watchlist items from the Watchlist component approach
-  // but for a standalone page we need to fetch them
-  const loadWatchedItems = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const q = query(
-        collection(db, "users", user.uid, "watchlist"),
-        where("watched", "==", true),
-        orderBy("addedAt", "desc")
-      );
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setWatchedItems(items);
-    } catch (err) {
-      console.error("Failed to load watched items:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    loadWatchedItems();
-  }, [loadWatchedItems]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (fetchRecommendationsRef.current) {
-        clearTimeout(fetchRecommendationsRef.current);
-      }
-    };
-  }, []);
 
   const fetchRecommendationsRef = useRef(null);
 
@@ -159,6 +124,47 @@ export default function RecommendationsPage() {
       }
     }, 200);
   }, [watchedItems]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (fetchRecommendationsRef.current) {
+        clearTimeout(fetchRecommendationsRef.current);
+      }
+    };
+  }, []);
+
+  // Load watched items from Firestore
+  const reloadWatchedItems = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const q = query(
+        collection(db, "users", user.uid, "watchlist"),
+        where("watched", "==", true),
+        orderBy("addedAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setWatchedItems(items);
+    } catch (err) {
+      console.error("Failed to load watched items:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Auto-fetch recommendations after watched items are loaded
+  const initialFetchRef = useRef(false);
+  useEffect(() => {
+    if (!loading && watchedItems.length > 0 && !initialFetchRef.current) {
+      initialFetchRef.current = true;
+      const timer = setTimeout(() => {
+        fetchRecommendations();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, watchedItems.length, fetchRecommendations]);
 
   const handleAdd = useCallback(
     async (item) => {
@@ -268,15 +274,15 @@ export default function RecommendationsPage() {
           </div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No Recommendations Yet
-          </h3>
+</h3>
           <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
             Mark some titles as "Seen" in your Watchlist, then come back here to get recommendations based on what you've watched.
           </p>
           <button
-            onClick={loadWatchedItems}
+            onClick={reloadWatchedItems}
             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center gap-2 mx-auto"
           >
-            <Search className="w-4 h-4" /> Refresh
+            <RefreshCw className="w-4 h-4" /> Refresh
           </button>
         </div>
       ) : (

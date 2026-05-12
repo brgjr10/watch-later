@@ -65,7 +65,7 @@ function NavigationBar({ user }) {
               <>
                 <NavLink to="/" label="Watchlist" icon={<Bookmark className="w-4 h-4" />} />
                 <NavLink to="/search" label="Discover" icon={<Plus className="w-4 h-4" />} />
-<NavLink to="/recommendations" label="Recs" icon={<FilmIcon className="w-4 h-4" />} />
+                <NavLink to="/recommendations" label="Recs" icon={<FilmIcon className="w-4 h-4" />} />
               </>
             )}
             {user && (
@@ -84,6 +84,22 @@ function NavigationBar({ user }) {
   );
 }
 
+function WatchlistLayout() {
+  return (
+    <>
+      <Watchlist />
+      {/* FAB - only visible on Watchlist page */}
+      <Link
+        to="/search"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/40 active:scale-90 transition-all duration-200 z-40 no-underline"
+        title="Add new title"
+      >
+        <Plus className="w-6 h-6 text-white" />
+      </Link>
+    </>
+  );
+}
+
 function App() {
   const { user } = useAuth();
 
@@ -95,7 +111,7 @@ function App() {
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           <Route
             path="/"
-            element={user ? <Watchlist /> : <Navigate to="/login" />}
+            element={user ? <WatchlistLayout /> : <Navigate to="/login" />}
           />
           <Route
             path="/search"
