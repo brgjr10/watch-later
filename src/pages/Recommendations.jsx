@@ -313,31 +313,27 @@ export default function RecommendationsPage() {
             </div>
             </div>
 
-            {/* Infinite scroll button */}
+            {/* Single infinite-scroll button */}
             {recommendations.length > 0 && (
               <div className="mt-6 flex justify-center">
-                {visibleCount < recommendations.length ? (
-                  <button
-                    onClick={showMore}
-                    className="flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    View More ({recommendations.length - visibleCount} more)
+                <button
+                  onClick={showMore}
+                  disabled={fetching}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all disabled:opacity-70"
+                >
+                  {fetching ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : visibleCount < recommendations.length ? (
                     <ChevronDown className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={showMore}
-                    disabled={fetching}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all disabled:opacity-70"
-                  >
-                    {fetching ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Plus className="w-4 h-4" />
-                    )}
-                    {fetching ? "Fetching..." : "Add More Recommendations"}
-                  </button>
-                )}
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  {fetching
+                    ? "Fetching..."
+                    : visibleCount < recommendations.length
+                    ? `View More (${recommendations.length - visibleCount} remaining)`
+                    : "Add More Recommendations"}
+                </button>
               </div>
             )}
         </>
