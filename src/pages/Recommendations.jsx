@@ -231,12 +231,10 @@ export default function RecommendationsPage() {
    );
 
     const showMore = useCallback(() => {
-      // If all loaded recommendations are already visible, fetch more
       if (visibleCount >= recommendations.length) {
         fetchRecommendations();
       } else {
-        // Otherwise just show more of the current list
-        setVisibleCount((prev) => Math.min(prev + 10, recommendations.length));
+        setVisibleCount(recommendations.length);
       }
     }, [visibleCount, recommendations.length, fetchRecommendations]);
 
@@ -331,7 +329,7 @@ export default function RecommendationsPage() {
                   {fetching
                     ? "Fetching..."
                     : visibleCount < recommendations.length
-                    ? `View More (${recommendations.length - visibleCount} remaining)`
+                    ? "Load More"
                     : "Add More Recommendations"}
                 </button>
               </div>
