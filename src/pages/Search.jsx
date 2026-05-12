@@ -435,39 +435,42 @@ const handleManualAdd = useCallback(
           videoId = match ? match[1] : null;
         }
 
-        let youtubeDuration = null;
-        let videoTitle = manualItem.title;
+         let youtubeDuration = null;
+         let videoTitle = manualItem.title;
+         let youtubeDescription = null;
 
-        if (manualItem.type === "youtube" && videoId) {
-          try {
-            const details = await getYouTubeVideoDetails(videoId);
-            youtubeDuration = details.duration || null;
-            if (details.title) {
-              videoTitle = details.title;
-            } else if (/^https?:\/\//.test(videoTitle)) {
-              videoTitle = null;
-            }
-          } catch (err) {
-            console.error("YouTube details fetch failed:", err);
-            if (/^https?:\/\//.test(videoTitle)) {
-              videoTitle = null;
-            }
-          }
-        }
+         if (manualItem.type === "youtube" && videoId) {
+           try {
+             const details = await getYouTubeVideoDetails(videoId);
+             youtubeDuration = details.duration || null;
+             youtubeDescription = details.description || null;
+             if (details.title) {
+               videoTitle = details.title;
+             } else if (/^https?:\/\//.test(videoTitle)) {
+               videoTitle = null;
+             }
+           } catch (err) {
+             console.error("YouTube details fetch failed:", err);
+             if (/^https?:\/\//.test(videoTitle)) {
+               videoTitle = null;
+             }
+           }
+         }
 
         if (manualItem.type !== "youtube") {
           videoTitle = manualItem.title;
         }
 
-        await addWatchlistItem(user.uid, {
-          tmdbId: Date.now(),
-          title: videoTitle,
-          type: manualItem.type,
-          provider: manualItem.type === "youtube" ? "YouTube" : manualItem.provider || "Unknown",
-          poster: null,
-          url: manualItem.type === "youtube" ? manualItem.url : undefined,
-          duration: youtubeDuration,
-        });
+         await addWatchlistItem(user.uid, {
+           tmdbId: Date.now(),
+           title: videoTitle,
+           type: manualItem.type,
+           provider: manualItem.type === "youtube" ? "YouTube" : manualItem.provider || "Unknown",
+           poster: null,
+           url: manualItem.type === "youtube" ? manualItem.url : undefined,
+           duration: youtubeDuration,
+           description: manualItem.type === "youtube" ? youtubeDescription : null,
+         });
 
         setManualMode(false);
       } catch (err) {

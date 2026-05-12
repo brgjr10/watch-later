@@ -303,7 +303,13 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
             )}
           </div>
 
-          {item.overview && (
+          {/* Description for YouTube, overview for movies/TV */}
+          {item.type === "youtube" && item.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 line-clamp-2">
+              {item.description}
+            </p>
+          )}
+          {item.overview && item.type !== "youtube" && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 line-clamp-2">
               {item.overview}
             </p>
@@ -538,8 +544,21 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
                  : formatRuntime(item.duration)}
              </span>
            )}
-         </div>
-         {item.note && !isExpanded && (
+          </div>
+
+          {/* Description for YouTube, overview for movies/TV */}
+          {item.type === "youtube" && item.description && (
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed">
+              {item.description}
+            </p>
+          )}
+          {item.overview && item.type !== "youtube" && (
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+              {item.overview}
+            </p>
+          )}
+
+          {item.note && !isExpanded && (
            <p className="text-[10px] text-indigo-400 dark:text-indigo-300 mt-1 italic truncate">
              📝 {item.note}
            </p>

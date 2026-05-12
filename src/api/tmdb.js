@@ -49,21 +49,22 @@ export const getYouTubeVideoDetails = async (videoId) => {
     );
     if (!res.ok) {
       console.error("YouTube API error:", res.status, res.statusText);
-      return { title: null, duration: null };
+      return { title: null, duration: null, description: null };
     }
     const data = await res.json();
     if (data.items?.[0]) {
       const item = data.items[0];
       const title = item.snippet?.title || null;
+      const description = item.snippet?.description || null;
       const duration = item.contentDetails?.duration
         ? parseISO8601Duration(item.contentDetails.duration)
         : null;
-      return { title, duration };
+      return { title, duration, description };
     }
   } catch (e) {
     console.error("YouTube API fetch error:", e);
   }
-  return { title: null, duration: null };
+  return { title: null, duration: null, description: null };
 };
 
 function parseISO8601Duration(isoDuration) {
