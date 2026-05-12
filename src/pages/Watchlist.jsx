@@ -699,15 +699,17 @@ export default function Watchlist() {
           return sortOrder === "asc"
             ? (a.provider || "").localeCompare(b.provider || "")
             : (b.provider || "").localeCompare(a.provider || "");
-        case "duration": {
-            const getDur = (it) => {
-              if (!it.duration) return 0;
-              return it.duration;
-            };
-            return sortOrder === "asc"
-              ? getDur(a) - getDur(b)
-              : getDur(b) - getDur(a);
-          }
+         case "duration": {
+             const getDur = (it) => {
+               if (!it.duration) return 0;
+               // YouTube durations are in seconds; TMDB is in minutes
+               // Convert TMDB minutes to seconds for consistent comparison
+               return it.type === "youtube" ? it.duration : it.duration * 60;
+             };
+             return sortOrder === "asc"
+               ? getDur(a) - getDur(b)
+               : getDur(b) - getDur(a);
+           }
         default:
           return sortOrder === "asc"
             ? (a.addedAt || 0) - (b.addedAt || 0)
