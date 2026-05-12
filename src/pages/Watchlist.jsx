@@ -2,11 +2,16 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
+  getImageUrl,
+  getRecommendations,
+} from "../api/tmdb";
+import {
   subscribeToWatchlist,
   toggleWatched as toggleWatchedService,
   removeWatchlistItem as removeWatchlistItemService,
+  updateWatchlistItem,
 } from "../services/watchlistService";
-import { getImageUrl } from "../api/tmdb";
+import RecommendationSection from "../components/recommendations";
 import {
   Check,
   X,
@@ -22,6 +27,7 @@ import {
   List,
   Eye,
   EyeOff,
+  Book,
 } from "lucide-react";
 
 const getYouTubeThumbnail = (url) => {
@@ -140,7 +146,9 @@ function PlayIcon(props) {
   );
 }
 
-function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove }) {
+function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove, onSaveNote, expandedNotes, onToggleNotes }) {
+  const isExpanded = expandedNotes.has(item.id);
+  const [noteText, setNoteText] = useState(item.note || "");
   return (
     <div
       className={`bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 transition-all duration-200 ${
@@ -269,6 +277,33 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               {item.overview}
             </p>
           )}
+
+          {item.note && !isExpanded && (
+            <p className="text-xs text-indigo-400 dark:text-indigo-300 mt-1 italic truncate">
+              📝 {item.note}
+            </p>
+          )}
+
+          {isExpanded && (
+            <div className="mt-2 animate-fade-in">
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add a note (e.g., Episode 5, remember the twist ending...)"
+                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                rows={2}
+              />
+              <button
+                onClick={() => {
+                  onSaveNote(item.id, noteText);
+                  onToggleNotes(item.id);
+                }}
+                className="mt-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-1"
+              >
+                <Check className="w-3 h-3" /> Save Note
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col justify-center pr-3 gap-2 flex-shrink-0">
@@ -290,16 +325,27 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               </>
             )}
           </button>
-          {!isSelectionMode && (
-            <button
-              onClick={() => onRemove(item.id)}
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
-              title="Remove"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+{!isSelectionMode && (
+              <>
+                <button
+                  onClick={() => onRemove(item.id)}
+                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+                  title="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onToggleNotes(item.id)}
+                  className={`w-8 h-8 flex items-center justify-center text-gray-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all ${
+                    item.note ? "text-indigo-400" : ""
+                  }`}
+                  title="Add/View note"
+                >
+                  <Book className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
       </div>
     </div>
   );
@@ -449,6 +495,8 @@ export default function Watchlist() {
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [expandedNotes, setExpandedNotes] = useState(new Set());
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     if (!user) {
@@ -504,6 +552,57 @@ export default function Watchlist() {
     setIsSelectionMode(false);
   }, [user, selectedItems]);
 
+  const handleSaveNote = useCallback(async (itemId, note) => {
+    if (!user) return;
+    await updateWatchlistItem(user.uid, itemId, { note });
+  }, [user]);
+
+  const toggleNotes = useCallback((itemId) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }, []);
+
+  const watchedItems = useMemo(
+    () => items.filter((i) => i.watched),
+    [items]
+  );
+
+  const fetchRecommendations = useCallback(async () => {
+    if (!watchedItems.length) return;
+    try {
+      const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
+      const pick = unique.slice(0, 3);
+      const recs = [];
+      for (const item of pick) {
+        try {
+          const data = await getRecommendations(item.type === "youtube" ? "movie" : item.type, item.tmdbId);
+          if (data.results) {
+            recs.push(...data.results.slice(0, 4));
+          }
+        } catch (e) {
+          console.error("Failed to get recommendations for", item.title, e);
+        }
+      }
+      const seen = new Set();
+      const uniqueRecs = recs.filter((r) => {
+        const key = r.id + r.media_type;
+        if (seen.has(key) || r.media_type === "person") return false;
+        seen.add(key);
+        return true;
+      });
+      setRecommendations(uniqueRecs.slice(0, 10));
+    } catch (err) {
+      console.error("Failed to fetch recommendations:", err);
+    }
+  }, [watchedItems]);
+
   // Filter, search, and sort items
   const filteredItems = useMemo(() => {
     let filtered = items;
@@ -549,6 +648,15 @@ export default function Watchlist() {
           return sortOrder === "asc"
             ? (a.provider || "").localeCompare(b.provider || "")
             : (b.provider || "").localeCompare(a.provider || "");
+        case "duration": {
+            const getDur = (it) => {
+              if (!it.duration) return 0;
+              return it.duration;
+            };
+            return sortOrder === "asc"
+              ? getDur(a) - getDur(b)
+              : getDur(b) - getDur(a);
+          }
         default:
           return sortOrder === "asc"
             ? (a.addedAt || 0) - (b.addedAt || 0)
@@ -680,6 +788,7 @@ export default function Watchlist() {
                 <option value="title">Title</option>
                 <option value="type">Type</option>
                 <option value="provider">Provider</option>
+                <option value="duration">Duration</option>
                 <option value="watched">Status</option>
               </select>
             </div>
@@ -794,9 +903,21 @@ export default function Watchlist() {
               onToggleSelect={handleToggleSelectItem}
               onToggleWatched={handleToggleWatched}
               onRemove={handleRemove}
+              onSaveNote={handleSaveNote}
+              expandedNotes={expandedNotes}
+              onToggleNotes={toggleNotes}
             />
           ))}
         </div>
+      )}
+
+      {watchedItems.length > 0 && (
+        <RecommendationSection
+          watchedItems={watchedItems}
+          recommendations={recommendations}
+          onFetchRecommendations={fetchRecommendations}
+          onHide={() => setRecommendations([])}
+        />
       )}
 
       {/* Add FAB */}

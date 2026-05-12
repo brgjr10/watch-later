@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import { useTheme } from "./context/ThemeContext";
 import { signOut } from "firebase/auth";
 import { auth } from "./firebase/config";
 import Login from "./pages/Login";
 import Watchlist from "./pages/Watchlist";
 import Search from "./pages/Search";
-import { Sun, Moon, LogOut, Plus, Bookmark } from "lucide-react";
+import { LogOut, Plus, Bookmark } from "lucide-react";
 
 function NavLink({ to, label, icon }) {
   const { pathname } = useLocation();
@@ -28,9 +27,7 @@ function NavLink({ to, label, icon }) {
   );
 }
 
-function NavigationBar() {
-  const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+function NavigationBar({ user }) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -60,12 +57,6 @@ function NavigationBar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span className="text-white font-bold text-sm leading-none">SW</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-              Stream Watchlist
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -75,17 +66,6 @@ function NavigationBar() {
                 <NavLink to="/search" label="Discover" icon={<Plus className="w-4 h-4" />} />
               </>
             )}
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
-            </button>
             {user && (
               <button
                 onClick={handleSignOut}
@@ -106,8 +86,8 @@ function App() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <NavigationBar />
+    <div className="min-h-screen bg-slate-950">
+      <NavigationBar user={user} />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-[calc(100vh-4rem)]">
         <Routes>
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />

@@ -26,6 +26,22 @@ export const getMediaDetails = async (type, id) => {
   return res.json();
 };
 
+export const getTrending = async (type = "all", timeWindow = "week") => {
+  const res = await fetch(
+    `${BASE_URL}/trending/${type}/${timeWindow}?api_key=${API_KEY}`
+  );
+  if (!res.ok) throw new Error("Trending fetch failed");
+  return res.json();
+};
+
+export const getRecommendations = async (type, id) => {
+  const res = await fetch(
+    `${BASE_URL}/${type}/${id}/recommendations?api_key=${API_KEY}&language=en-US&page=1`
+  );
+  if (!res.ok) throw new Error("Recommendations fetch failed");
+  return res.json();
+};
+
 export const getYouTubeVideoDetails = async (videoId) => {
   try {
     const res = await fetch(
