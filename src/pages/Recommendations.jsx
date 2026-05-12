@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getRecommendations, getWatchProviders, getMediaDetails, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2, Film, Plus, ArrowLeft, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { getDocs, collection, query, where, orderBy } from "firebase/firestore";
 import { db } from "../firebase/config";
