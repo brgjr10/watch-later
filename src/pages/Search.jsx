@@ -20,6 +20,8 @@ import {
   AlertCircle,
   Sparkles,
   ArrowRight,
+  List,
+  Grid3X3,
 } from "lucide-react";
 
 function YoutubeIcon(props) {
@@ -46,9 +48,78 @@ function SearchInput({ value, onChange, autoFocus, placeholder, className }) {
   );
 }
 
-function ResultCard({ item, onAdd, isAdding, isAdded }) {
+function ResultCard({ item, onAdd, isAdding, isAdded, viewMode = "grid" }) {
   const typeLabel = item.type === "tv" ? "TV Show" : "Movie";
 
+  if (viewMode === "list") {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-md shadow-gray-200/20 dark:shadow-gray-900/20 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+        <div className="flex">
+          <div className="relative w-24 h-36 flex-shrink-0">
+            {item.poster ? (
+              <img
+                src={getImageUrl(item.poster)}
+                alt={item.title}
+                className="w-full h-full object-cover rounded-l-2xl"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex items-center justify-center">
+                <Film className="w-6 h-6 text-gray-400" />
+              </div>
+            )}
+            <div className="absolute bottom-1 left-1">
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full font-bold bg-black/50 text-white">
+                {item.type === "tv" ? "TV" : "MOV"}
+              </span>
+            </div>
+          </div>
+          <div className="flex-1 p-4 min-w-0">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+              {item.title}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {typeLabel}
+              {item.year && ` · ${item.year}`}
+              {item.vote_average && ` · ★ ${item.vote_average.toFixed(1)}`}
+            </p>
+            {item.overview && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
+                {item.overview}
+              </p>
+            )}
+            <button
+              onClick={() => onAdd(item)}
+              disabled={isAdding || isAdded}
+              className={`mt-3 px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                isAdded
+                  ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                  : isAdding
+                  ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+              }`}
+            >
+              {isAdded ? (
+                <>
+                  <Check className="w-4 h-4" /> Added
+                </>
+              ) : isAdding ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" /> Add
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view (default)
   return (
     <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-md shadow-gray-200/20 dark:shadow-gray-900/20 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 group">
       <div className="relative">
@@ -60,7 +131,7 @@ function ResultCard({ item, onAdd, isAdding, isAdded }) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+          <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 to-gray-900 flex items-center justify-center">
             <Film className="w-10 h-10 text-gray-400" />
           </div>
         )}
@@ -256,8 +327,9 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [addingStates, setAddingStates] = useState({});
-  const [error, setError] = useState(null);
-  const [addedIds, setAddedIds] = useState(new Set());
+   const [error, setError] = useState(null);
+   const [addedIds, setAddedIds] = useState(new Set());
+   const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
 
   const handleSearch = useCallback(async (searchQuery) => {
     if (!searchQuery.trim() || searchQuery.trim().length < 2) {
@@ -411,16 +483,43 @@ const handleManualAdd = useCallback(
   // Determine the active type based on URL input (no effect needed)
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8 animate-fade-in-up">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-indigo-500" />
-          Discover
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Search for movies, TV shows, or YouTube videos to add to your watchlist
-        </p>
-      </div>
+       {/* Header */}
+       <div className="mb-8 animate-fade-in-up flex items-center justify-between">
+         <div>
+           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+             <Sparkles className="w-6 h-6 text-indigo-500" />
+             Discover
+           </h1>
+           <p className="text-gray-500 dark:text-gray-400 text-sm">
+             Search for movies, TV shows, or YouTube videos to add to your watchlist
+           </p>
+         </div>
+         {/* View Mode Toggle */}
+         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
+           <button
+             onClick={() => setViewMode("list")}
+             className={`p-1.5 transition-all ${
+               viewMode === "list"
+                 ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                 : "text-gray-500 dark:text-gray-400"
+             } rounded-l-xl`}
+             title="List view"
+           >
+             <List className="w-4 h-4" />
+           </button>
+           <button
+             onClick={() => setViewMode("grid")}
+             className={`p-1.5 transition-all ${
+               viewMode === "grid"
+                 ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                 : "text-gray-500 dark:text-gray-400"
+             } rounded-r-xl`}
+             title="Grid view"
+           >
+             <Grid3X3 className="w-4 h-4" />
+           </button>
+         </div>
+       </div>
 
       {/* Error Banner */}
       {error && (
@@ -469,58 +568,85 @@ const handleManualAdd = useCallback(
         )}
       </div>
 
-      {/* Results */}
-      {!manualMode ? (
-        <>
-          {/* Loading */}
-          {loading && query.length >= 2 && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="flex items-center gap-2 text-gray-400 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" /> Searching...
-              </div>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
-                  <div className="flex gap-4">
-                    <div className="w-16 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+           {/* Results */}
+           {!manualMode ? (
+             <>
+               {/* Loading */}
+               {loading && query.length >= 2 && (
+                 viewMode === "grid" ? (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+                     {Array.from({ length: 6 }).map((_, i) => (
+                       <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                         <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
+                         <div className="p-4 space-y-3">
+                           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 ) : (
+                   <div className="space-y-4 animate-fade-in">
+                     {Array.from({ length: 5 }).map((_, i) => (
+                       <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                         <div className="flex gap-4">
+                           <div className="w-24 h-36 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0" />
+                           <div className="flex-1 space-y-3">
+                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                           </div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )
+               )}
 
-          {/* Empty state - no query */}
-          {!loading && !query.trim() && (
-            <div className="text-center py-20 animate-fade-in">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center">
-                <SearchIcon className="w-10 h-10 text-indigo-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Start Searching
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Type a movie or TV show name above, or try one of the popular suggestions to discover something new.
-              </p>
-            </div>
-          )}
+               {/* Empty state - no query */}
+               {!loading && !query.trim() && (
+                 <div className="text-center py-20 animate-fade-in">
+                   <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center">
+                     <SearchIcon className="w-10 h-10 text-indigo-400" />
+                   </div>
+                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                     Start Searching
+                   </h3>
+                   <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                     Type a movie or TV show name above, or try one of the popular suggestions to discover something new.
+                   </p>
+                 </div>
+               )}
 
-          {/* Results grid */}
-          {!loading && query.trim() && results.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
-              {results.map((item) => (
-                <ResultCard
-                  key={`${item.type}-${item.id}`}
-                  item={item}
-                  onAdd={handleAdd}
-                  isAdding={!!addingStates[item.id]}
-                  isAdded={addedIds.has(item.id)}
-                />
-              ))}
-            </div>
-          )}
+               {/* Results */}
+               {!loading && query.trim() && results.length > 0 && (
+                 viewMode === "grid" ? (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+                     {results.map((item) => (
+                       <ResultCard
+                         key={`${item.type}-${item.id}`}
+                         item={item}
+                         onAdd={handleAdd}
+                         isAdding={!!addingStates[item.id]}
+                         isAdded={addedIds.has(item.id)}
+                         viewMode="grid"
+                       />
+                     ))}
+                   </div>
+                 ) : (
+                   <div className="space-y-4 animate-fade-in">
+                     {results.map((item) => (
+                       <ResultCard
+                         key={`${item.type}-${item.id}`}
+                         item={item}
+                         onAdd={handleAdd}
+                         isAdding={!!addingStates[item.id]}
+                         isAdded={addedIds.has(item.id)}
+                         viewMode="list"
+                       />
+                     ))}
+                   </div>
+                 )
+               )}
 
           {/* No results */}
           {!loading && query.trim() && results.length === 0 && !error && (

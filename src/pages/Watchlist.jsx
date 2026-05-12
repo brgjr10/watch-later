@@ -510,10 +510,22 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
       </div>
 
 <div className="p-3">
-         <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
-           {normalizeYouTubeTitle(item.title) || "YouTube Video"}
-         </h3>
-         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+  {item.type === "youtube" && item.url ? (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => isSelectionMode && e.preventDefault()}
+      className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
+    >
+      {normalizeYouTubeTitle(item.title) || "YouTube Video"}
+    </a>
+  ) : (
+    <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+      {item.title}
+    </h3>
+  )}
+  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
            <span className="text-[10px] text-gray-500 dark:text-gray-400">
              {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
              {item.provider && item.type !== "youtube" && ` · ${item.provider}`}

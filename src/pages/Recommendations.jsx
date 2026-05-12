@@ -3,12 +3,15 @@ import { useAuth } from "../context/AuthContext";
 import { getRecommendations, getWatchProviders, getMediaDetails, getImageUrl } from "../api/tmdb";
 import { addWatchlistItem } from "../services/watchlistService";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Film, Plus, ArrowLeft, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Loader2, Film, Plus, ArrowLeft, ChevronDown, ChevronUp, RefreshCw, List, Grid3X3 } from "lucide-react";
 import { getDocs, collection, query, where, orderBy } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-function RecCard({ item, onAdd, isAdding }) {
-  return (
+function RecCard({ item, onAdd, isAdding, viewMode = "grid" }) {
+  const isYouTube = item.media_type === "youtube" || item.url?.includes?.("youtube");
+  const youtubeUrl = item.url || (item.videoId ? `https://www.youtube.com/watch?v=${item.videoId}` : null);
+
+  return viewMode === "grid" ? (
     <button
       onClick={() => onAdd(item)}
       disabled={isAdding}
@@ -27,13 +30,25 @@ function RecCard({ item, onAdd, isAdding }) {
           }}
         />
       ) : null}
-      <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center rounded-t-2xl hidden">
+      <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 to-gray-900 flex items-center justify-center rounded-t-2xl hidden">
         <Film className="w-8 h-8 text-gray-400" />
       </div>
       <div className="p-3">
-        <h4 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
-          {item.title || item.name}
-        </h4>
+        {isYouTube && youtubeUrl ? (
+          <a
+            href={youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
+          >
+            {item.title || item.name || "YouTube Video"}
+          </a>
+        ) : (
+          <h4 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+            {item.title || item.name}
+          </h4>
+        )}
         <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
           {item.media_type === "tv" ? "TV Show" : "Movie"}
           {item.vote_average && ` · ★ ${item.vote_average.toFixed(1)}`}
@@ -50,6 +65,63 @@ function RecCard({ item, onAdd, isAdding }) {
         </p>
       </div>
     </button>
+  ) : (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-md shadow-gray-200/20 dark:shadow-gray-900/20 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+      <div className="flex">
+        <div className="relative w-24 h-36 flex-shrink-0">
+          {item.poster_path ? (
+            <img
+              src={getImageUrl(item.poster_path)}
+              alt={item.title || item.name}
+              className="w-full h-full object-cover rounded-l-2xl"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex items-center justify-center">
+              <Film className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
+          {item.media_type === "tv" && (
+            <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-[8px] rounded">
+              TV
+            </div>
+          )}
+        </div>
+        <div className="flex-1 p-4 min-w-0">
+          <div className="flex items-start justify-between">
+            <div>
+              {isYouTube && youtubeUrl ? (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1 hover:underline"
+                >
+                  {item.title || item.name || "YouTube Video"}
+                </a>
+              ) : (
+                <h4 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+                  {item.title || item.name}
+                </h4>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {item.media_type === "tv" ? "TV Show" : "Movie"}
+                {item.vote_average && ` · ★ ${item.vote_average.toFixed(1)}`}
+              </p>
+            </div>
+            <button
+              onClick={() => onAdd(item)}
+              disabled={isAdding}
+              className="px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-70 transition-all flex items-center gap-1"
+            >
+              {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+              {isAdding ? "Adding..." : "Add"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -63,7 +135,8 @@ export default function RecommendationsPage() {
   const [fetching, setFetching] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
 
-  const [watchedItems, setWatchedItems] = useState([]);
+   const [watchedItems, setWatchedItems] = useState([]);
+   const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
 
   useEffect(() => {
     if (!user) {
@@ -254,73 +327,133 @@ export default function RecommendationsPage() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <header className="pt-8 pb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 text-gray-400 hover:text-gray-200 transition-colors rounded-xl hover:bg-gray-800"
-            aria-label="Back to watchlist"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Recommended For You
-          </h1>
-        </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 ml-12">
-          Based on {watchedItems.length} watched {watchedItems.length === 1 ? "title" : "titles"}
-        </p>
-      </header>
+       <header className="pt-8 pb-6">
+         <div className="flex items-center justify-between mb-2">
+           <div className="flex items-center gap-3">
+             <button
+               onClick={() => navigate("/")}
+               className="p-2 text-gray-400 hover:text-gray-200 transition-colors rounded-xl hover:bg-gray-800"
+               aria-label="Back to watchlist"
+             >
+               <ArrowLeft className="w-5 h-5" />
+             </button>
+             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+               Recommended For You
+             </h1>
+           </div>
+           {/* View Mode Toggle */}
+           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
+             <button
+               onClick={() => setViewMode("list")}
+               className={`p-1.5 transition-all ${
+                 viewMode === "list"
+                   ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                   : "text-gray-500 dark:text-gray-400"
+               } rounded-l-xl`}
+               title="List view"
+             >
+               <List className="w-4 h-4" />
+             </button>
+             <button
+               onClick={() => setViewMode("grid")}
+               className={`p-1.5 transition-all ${
+                 viewMode === "grid"
+                   ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                   : "text-gray-500 dark:text-gray-400"
+               } rounded-r-xl`}
+               title="Grid view"
+             >
+               <Grid3X3 className="w-4 h-4" />
+             </button>
+           </div>
+         </div>
+         <p className="text-sm text-gray-500 dark:text-gray-400">
+           Based on {watchedItems.length} watched {watchedItems.length === 1 ? "title" : "titles"}
+         </p>
+       </header>
 
-      {/* Content */}
-      {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
-              <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
-              <div className="p-3 space-y-3">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                <div className="flex gap-2">
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : recommendations.length === 0 && !fetching ? (
-        <div className="text-center py-20 animate-fade-in">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center">
-            <Film className="w-10 h-10 text-indigo-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No Recommendations Yet
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-            Mark some titles as "Seen" in your Watchlist, then come back here to get recommendations based on what you've watched.
-          </p>
-          <button
-            onClick={loadWatchedItems}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center gap-2 mx-auto"
-          >
-            <RefreshCw className="w-4 h-4" /> Refresh
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
-              {visibleRecs.map((item) => (
-                <RecCard
-                  key={`rec-${item.id}`}
-                  item={item}
-                  onAdd={handleAdd}
-                  isAdding={!!addingStates[item.id]}
-                />
-              ))}
-            </div>
-            </div>
+       {/* Content */}
+       {loading ? (
+         viewMode === "grid" ? (
+           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in px-4 sm:px-6 lg:px-8">
+             {Array.from({ length: 10 }).map((_, i) => (
+               <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                 <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-gray-700" />
+                 <div className="p-3 space-y-3">
+                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                   <div className="flex gap-2">
+                     <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+                     <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+                   </div>
+                 </div>
+               </div>
+             ))}
+           </div>
+         ) : (
+           <div className="space-y-3 animate-fade-in px-4 sm:px-6 lg:px-8">
+             {Array.from({ length: 5 }).map((_, i) => (
+               <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                 <div className="flex">
+                   <div className="w-24 h-36 bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex-shrink-0" />
+                   <div className="flex-1 p-4 space-y-3">
+                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                     <div className="flex gap-2">
+                       <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+                       <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             ))}
+           </div>
+         )
+       ) : recommendations.length === 0 && !fetching ? (
+         <div className="text-center py-20 animate-fade-in">
+           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center">
+             <Film className="w-10 h-10 text-indigo-400" />
+           </div>
+           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+             No Recommendations Yet
+           </h3>
+           <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+             Mark some titles as "Seen" in your Watchlist, then come back here to get recommendations based on what you've watched.
+           </p>
+           <button
+             onClick={loadWatchedItems}
+             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center gap-2 mx-auto"
+           >
+             <RefreshCw className="w-4 h-4" /> Refresh
+           </button>
+         </div>
+       ) : (
+         <>
+           {viewMode === "grid" ? (
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in px-4 sm:px-6 lg:px-8">
+               {visibleRecs.map((item) => (
+                 <RecCard
+                   key={`rec-${item.id}`}
+                   item={item}
+                   onAdd={handleAdd}
+                   isAdding={!!addingStates[item.id]}
+                   viewMode="grid"
+                 />
+               ))}
+             </div>
+           ) : (
+             <div className="space-y-3 animate-fade-in px-4 sm:px-6 lg:px-8">
+               {visibleRecs.map((item) => (
+                 <RecCard
+                   key={`rec-${item.id}`}
+                   item={item}
+                   onAdd={handleAdd}
+                   isAdding={!!addingStates[item.id]}
+                   viewMode="list"
+                 />
+               ))}
+             </div>
+           )}
 
             {/* Single infinite-scroll button */}
             {recommendations.length > 0 && (
