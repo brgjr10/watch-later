@@ -238,7 +238,18 @@ export default function RecommendationsPage() {
       }
     }, [visibleCount, recommendations.length, fetchRecommendations]);
 
-    const visibleRecs = useMemo(() => recommendations.slice(0, visibleCount), [recommendations, visibleCount]);
+    const prevRecsLengthRef = useRef(0);
+
+  // Auto-show all newly fetched items when they arrive
+  useEffect(() => {
+    // If recommendations increased and previously all were visible
+    if (recommendations.length > prevRecsLengthRef.current && visibleCount === prevRecsLengthRef.current) {
+      setVisibleCount(recommendations.length);
+    }
+    prevRecsLengthRef.current = recommendations.length;
+  }, [recommendations.length, visibleCount]);
+
+  const visibleRecs = useMemo(() => recommendations.slice(0, visibleCount), [recommendations, visibleCount]);
 
   return (
     <div className="pb-20">
