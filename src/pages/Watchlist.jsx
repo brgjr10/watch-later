@@ -384,7 +384,9 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
   );
 }
 
-function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove }) {
+function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleWatched, onRemove, onSaveNote, expandedNotes, onToggleNotes }) {
+  const isExpanded = expandedNotes.has(item.id);
+  const [noteText, setNoteText] = useState(item.note || "");
   return (
     <div
       className={`bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 transition-all duration-300 group ${
@@ -412,17 +414,17 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
 
         {item.type === "youtube" ? (
           <>
-            {getYouTubeThumbnail(item.url) ? (
-              <img
-                src={getYouTubeThumbnail(item.url)}
-                alt={item.title && !item.title.startsWith("http") ? item.title : "YouTube Video"}
-                className="w-full aspect-[2/3] object-cover"
-                onError={(e) => {
-                  e.target.classList.add("hidden");
-                  const fb = e.target.nextElementSibling;
-                  if (fb) fb.classList.remove("hidden");
-                }}
-              />
+{getYouTubeThumbnail(item.url) ? (
+                 <img
+                   src={getYouTubeThumbnail(item.url)}
+                   alt={normalizeYouTubeTitle(item.title) || "YouTube Video"}
+                   className="w-full aspect-[2/3] object-cover"
+                   onError={(e) => {
+                     e.target.classList.add("hidden");
+                     const fb = e.target.nextElementSibling;
+                     if (fb) fb.classList.remove("hidden");
+                   }}
+                 />
             ) : (
               <div className="absolute inset-0 bg-gray-300 dark:bg-gray-800 flex items-center justify-center">
                 <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
@@ -499,30 +501,50 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
         </div>
       </div>
 
-      <div className="p-3">
-<h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
+<div className="p-3">
+         <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight line-clamp-1">
            {normalizeYouTubeTitle(item.title) || "YouTube Video"}
          </h3>
-        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
-            {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
-            {item.provider && item.type !== "youtube" && ` · ${item.provider}`}
-          </span>
-          {item.duration && (
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {item.type === "youtube"
-                ? formatDuration(item.duration)
-                : formatRuntime(item.duration)}
-            </span>
-          )}
-        </div>
-        {item.note && (
-          <p className="text-[10px] text-indigo-400 dark:text-indigo-300 mt-1 italic truncate">
-            📝 {item.note}
-          </p>
-        )}
-      </div>
+         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+           <span className="text-[10px] text-gray-500 dark:text-gray-400">
+             {item.type === "tv" ? "TV Show" : item.type === "youtube" ? "YouTube" : "Movie"}
+             {item.provider && item.type !== "youtube" && ` · ${item.provider}`}
+           </span>
+           {item.duration && (
+             <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+               <Clock className="w-3 h-3" />
+               {item.type === "youtube"
+                 ? formatDuration(item.duration)
+                 : formatRuntime(item.duration)}
+             </span>
+           )}
+         </div>
+         {item.note && !isExpanded && (
+           <p className="text-[10px] text-indigo-400 dark:text-indigo-300 mt-1 italic truncate">
+             📝 {item.note}
+           </p>
+         )}
+         {isExpanded && (
+           <div className="mt-2 animate-fade-in">
+             <textarea
+               value={noteText}
+               onChange={(e) => setNoteText(e.target.value)}
+               placeholder="Add a note..."
+               className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+               rows={2}
+             />
+             <button
+               onClick={() => {
+                 onSaveNote(item.id, noteText);
+                 onToggleNotes(item.id);
+               }}
+               className="mt-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-1"
+             >
+               <Check className="w-3 h-3" /> Save Note
+             </button>
+           </div>
+         )}
+       </div>
     </div>
   );
 }
@@ -936,15 +958,18 @@ export default function Watchlist() {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
           {filteredItems.map((item) => (
-            <GridItem
-              key={item.id}
-              item={item}
-              isSelected={selectedItems.has(item.id)}
-              isSelectionMode={isSelectionMode}
-              onToggleSelect={handleToggleSelectItem}
-              onToggleWatched={handleToggleWatched}
-              onRemove={handleRemove}
-            />
+<GridItem
+               key={item.id}
+               item={item}
+               isSelected={selectedItems.has(item.id)}
+               isSelectionMode={isSelectionMode}
+               onToggleSelect={handleToggleSelectItem}
+               onToggleWatched={handleToggleWatched}
+               onRemove={handleRemove}
+               onSaveNote={handleSaveNote}
+               expandedNotes={expandedNotes}
+               onToggleNotes={toggleNotes}
+             />
           ))}
         </div>
       ) : (

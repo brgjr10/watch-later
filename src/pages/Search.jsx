@@ -349,50 +349,49 @@ export default function Search() {
   );
 
 const handleManualAdd = useCallback(
-     async (manualItem) => {
-       setAddingStates((prev) => ({ ...prev, manual: true }));
-       setError(null);
-       try {
-         let videoId = null;
-         if (manualItem.type === "youtube") {
-           const match = manualItem.url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-           videoId = match ? match[1] : null;
-         }
+    async (manualItem) => {
+      setAddingStates((prev) => ({ ...prev, manual: true }));
+      setError(null);
+      try {
+        let videoId = null;
+        if (manualItem.type === "youtube") {
+          const match = manualItem.url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+          videoId = match ? match[1] : null;
+        }
 
-         let youtubeDuration = null;
-         let videoTitle = manualItem.title;
+        let youtubeDuration = null;
+        let videoTitle = manualItem.title;
 
-         if (manualItem.type === "youtube" && videoId) {
-           try {
-             const details = await getYouTubeVideoDetails(videoId);
-             youtubeDuration = details.duration || null;
-             if (details.title) {
-               videoTitle = details.title;
-             } else if (/^https?:\/\//.test(videoTitle)) {
-               videoTitle = null;
-             }
-           } catch (err) {
-             console.error("YouTube details fetch failed:", err);
-             // If title is a URL and we failed to fetch a real title, clear it
-             if (/^https?:\/\//.test(videoTitle)) {
-               videoTitle = null;
-             }
-           }
-         }
+        if (manualItem.type === "youtube" && videoId) {
+          try {
+            const details = await getYouTubeVideoDetails(videoId);
+            youtubeDuration = details.duration || null;
+            if (details.title) {
+              videoTitle = details.title;
+            } else if (/^https?:\/\//.test(videoTitle)) {
+              videoTitle = null;
+            }
+          } catch (err) {
+            console.error("YouTube details fetch failed:", err);
+            if (/^https?:\/\//.test(videoTitle)) {
+              videoTitle = null;
+            }
+          }
+        }
 
-         if (manualItem.type !== "youtube") {
-           videoTitle = manualItem.title;
-         }
+        if (manualItem.type !== "youtube") {
+          videoTitle = manualItem.title;
+        }
 
-         await addWatchlistItem(user.uid, {
-           tmdbId: Date.now(),
-           title: videoTitle,
-           type: manualItem.type,
-           provider: manualItem.type === "youtube" ? "YouTube" : manualItem.provider || "Unknown",
-           poster: null,
-           url: manualItem.type === "youtube" ? manualItem.url : undefined,
-           duration: youtubeDuration,
-         });
+        await addWatchlistItem(user.uid, {
+          tmdbId: Date.now(),
+          title: videoTitle,
+          type: manualItem.type,
+          provider: manualItem.type === "youtube" ? "YouTube" : manualItem.provider || "Unknown",
+          poster: null,
+          url: manualItem.type === "youtube" ? manualItem.url : undefined,
+          duration: youtubeDuration,
+        });
 
         setManualMode(false);
       } catch (err) {

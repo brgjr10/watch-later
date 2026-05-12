@@ -56,13 +56,13 @@ function RecCard({ item, onAdd, isAdding }) {
 export default function RecommendationsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [recommendations, setRecommendations] = useState([]);
   const [addingStates, setAddingStates] = useState({});
   const [loading, setLoading] = useState(false);
-const [fetching, setFetching] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
 
-  // Fetch watched items directly for computing recommendations
   const [watchedItems, setWatchedItems] = useState([]);
 
   useEffect(() => {
@@ -74,17 +74,18 @@ const [fetching, setFetching] = useState(false);
 
   const fetchRecommendationsRef = useRef(null);
 
+  // Auto-fetch recommendations after watched items are loaded
+  const initialFetchRef = useRef(false);
+
   const fetchRecommendations = useCallback(async () => {
     if (!watchedItems.length) return;
     if (fetchRecommendationsRef.current) {
       clearTimeout(fetchRecommendationsRef.current);
     }
     setFetching(true);
-    // Debounce: small delay to prevent rapid clicking
     fetchRecommendationsRef.current = setTimeout(async () => {
       try {
         const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
-        // Fisher-Yates shuffle on a copy to avoid mutating watchedItems
         const shuffled = [...unique];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -134,8 +135,8 @@ const [fetching, setFetching] = useState(false);
     };
   }, []);
 
-  // Load watched items from Firestore
-  const reloadWatchedItems = useCallback(async () => {
+  // Load watched items from Firestore on mount
+  const loadWatchedItems = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -154,8 +155,10 @@ const [fetching, setFetching] = useState(false);
     }
   }, [user]);
 
-  // Auto-fetch recommendations after watched items are loaded
-  const initialFetchRef = useRef(false);
+  useEffect(() => {
+    loadWatchedItems(); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [loadWatchedItems]);
+
   useEffect(() => {
     if (!loading && watchedItems.length > 0 && !initialFetchRef.current) {
       initialFetchRef.current = true;
@@ -274,12 +277,12 @@ const [fetching, setFetching] = useState(false);
           </div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No Recommendations Yet
-</h3>
+          </h3>
           <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
             Mark some titles as "Seen" in your Watchlist, then come back here to get recommendations based on what you've watched.
           </p>
           <button
-            onClick={reloadWatchedItems}
+            onClick={loadWatchedItems}
             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-4 h-4" /> Refresh
