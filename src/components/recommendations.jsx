@@ -9,6 +9,7 @@ export default function RecommendationSection({
   recommendations,
   onFetchRecommendations,
   onHide,
+  fetching,
 }) {
   const { user } = useAuth();
   const [addingStates, setAddingStates] = useState({});
@@ -74,10 +75,15 @@ export default function RecommendationSection({
         <div className="mt-8 animate-fade-in">
           <button
             onClick={onFetchRecommendations}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all mx-auto"
+            disabled={fetching}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.97] transition-all mx-auto disabled:opacity-70"
           >
-            <RefreshCw className="w-4 h-4" />
-            Get Recommendations Based on Watched
+            {fetching ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            {fetching ? "Fetching..." : "Get Recommendations Based on Watched"}
           </button>
         </div>
       )}

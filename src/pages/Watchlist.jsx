@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -30,11 +30,11 @@ import {
   Book,
 } from "lucide-react";
 
-const getYouTubeThumbnail = (url) => {
+const getYouTubeThumbnail = (url, quality = "hqdefault") => {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+    return `https://img.youtube.com/vi/${match[1]}/${quality}.jpg`;
   }
   return null;
 };
@@ -186,7 +186,7 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
                 }}
               />
               <div
-                className="hidden absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-l-2xl items-center justify-center youtube-fallback"
+                className="hidden absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-l-2xl flex items-center justify-center youtube-fallback"
               >
                 <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
               </div>
@@ -325,26 +325,26 @@ function ListItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               </>
             )}
           </button>
-{!isSelectionMode && (
-              <>
-                <button
-                  onClick={() => onRemove(item.id)}
-                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
-                  title="Remove"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onToggleNotes(item.id)}
-                  className={`w-8 h-8 flex items-center justify-center text-gray-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all ${
-                    item.note ? "text-indigo-400" : ""
-                  }`}
-                  title="Add/View note"
-                >
-                  <Book className="w-4 h-4" />
-                </button>
-              </>
-            )}
+          {!isSelectionMode && (
+            <>
+              <button
+                onClick={() => onRemove(item.id)}
+                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+                title="Remove"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onToggleNotes(item.id)}
+                className={`w-8 h-8 flex items-center justify-center text-gray-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all ${
+                  item.note ? "text-indigo-400" : ""
+                }`}
+                title="Add/View note"
+              >
+                <Book className="w-4 h-4" />
+              </button>
+            </>
+          )}
           </div>
       </div>
     </div>
@@ -384,14 +384,13 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
               alt={item.title}
               className="w-full aspect-[2/3] object-cover"
               onError={(e) => {
-                e.target.style.display = "none";
+                e.target.classList.add("hidden");
                 const fb = e.target.nextElementSibling;
-                if (fb) fb.style.display = "flex";
+                if (fb) fb.classList.remove("hidden");
               }}
             />
             <div
-              className="hidden absolute inset-0 bg-gray-300 dark:bg-gray-800 items-center justify-center"
-              style={{ display: "none" }}
+              className="absolute inset-0 bg-gray-300 dark:bg-gray-800 items-center justify-center hidden"
             >
               <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
             </div>
@@ -497,6 +496,8 @@ export default function Watchlist() {
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState(new Set());
   const [recommendations, setRecommendations] = useState([]);
+  const [fetchingRecommendations, setFetchingRecommendations] = useState(false);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     if (!user) {
@@ -576,31 +577,41 @@ export default function Watchlist() {
 
   const fetchRecommendations = useCallback(async () => {
     if (!watchedItems.length) return;
-    try {
-      const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
-      const pick = unique.slice(0, 3);
-      const recs = [];
-      for (const item of pick) {
-        try {
-          const data = await getRecommendations(item.type === "youtube" ? "movie" : item.type, item.tmdbId);
-          if (data.results) {
-            recs.push(...data.results.slice(0, 4));
-          }
-        } catch (e) {
-          console.error("Failed to get recommendations for", item.title, e);
-        }
-      }
-      const seen = new Set();
-      const uniqueRecs = recs.filter((r) => {
-        const key = r.id + r.media_type;
-        if (seen.has(key) || r.media_type === "person") return false;
-        seen.add(key);
-        return true;
-      });
-      setRecommendations(uniqueRecs.slice(0, 10));
-    } catch (err) {
-      console.error("Failed to fetch recommendations:", err);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
     }
+    setFetchingRecommendations(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const unique = [...new Map(watchedItems.map((i) => [i.type + i.id, i])).values()];
+        // Pick 3 random watched items
+        const shuffled = unique.sort(() => Math.random() - 0.5);
+        const pick = shuffled.slice(0, 3);
+        const recs = [];
+        for (const item of pick) {
+          try {
+            const data = await getRecommendations(item.type === "youtube" ? "movie" : item.type, item.tmdbId);
+            if (data.results) {
+              recs.push(...data.results.slice(0, 4));
+            }
+          } catch (e) {
+            console.error("Failed to get recommendations for", item.title, e);
+          }
+        }
+        const seen = new Set();
+        const uniqueRecs = recs.filter((r) => {
+          const key = r.id + r.media_type;
+          if (seen.has(key) || r.media_type === "person") return false;
+          seen.add(key);
+          return true;
+        });
+        setRecommendations(uniqueRecs.slice(0, 10));
+      } catch (err) {
+        console.error("Failed to fetch recommendations:", err);
+      } finally {
+        setFetchingRecommendations(false);
+      }
+    }, 300);
   }, [watchedItems]);
 
   // Filter, search, and sort items
@@ -917,6 +928,7 @@ export default function Watchlist() {
           recommendations={recommendations}
           onFetchRecommendations={fetchRecommendations}
           onHide={() => setRecommendations([])}
+          fetching={fetchingRecommendations}
         />
       )}
 
