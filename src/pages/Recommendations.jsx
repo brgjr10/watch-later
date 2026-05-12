@@ -176,58 +176,59 @@ export default function RecommendationsPage() {
     }
   }, [loading, watchedItems.length, fetchRecommendations]);
 
-  const handleAdd = useCallback(
-    async (item) => {
-      if (!user) return;
-      setAddingStates((prev) => ({ ...prev, [item.id]: true }));
-      try {
-        const providers = await getWatchProviders(item.type, item.id);
-        const usProviders =
-          providers.results?.US?.flatrate ||
-          providers.results?.US?.rent ||
-          [];
-        const provider = usProviders[0]?.provider_name || "Unknown";
-        const logoPath = usProviders[0]?.logo_path ?? null;
+   const handleAdd = useCallback(
+     async (item) => {
+       if (!user) return;
+       setAddingStates((prev) => ({ ...prev, [item.id]: true }));
+       try {
+         const mediaType = item.media_type; // "movie", "tv", etc.
+         const providers = await getWatchProviders(mediaType, item.id);
+         const usProviders =
+           providers.results?.US?.flatrate ||
+           providers.results?.US?.rent ||
+           [];
+         const provider = usProviders[0]?.provider_name || "Unknown";
+         const logoPath = usProviders[0]?.logo_path ?? null;
 
-        let runtime = null;
-        if (item.type === "movie" || item.type === "tv") {
-          try {
-            const details = await getMediaDetails(item.type, item.id);
-            if (details.runtime != null) {
-              runtime = details.runtime;
-            } else if (
-              details.episode_run_time &&
-              details.episode_run_time.length > 0
-            ) {
-              runtime = details.episode_run_time[0];
-            }
-          } catch (e) {
-            console.error("Failed to fetch runtime:", e);
-          }
-        }
+         let runtime = null;
+         if (mediaType === "movie" || mediaType === "tv") {
+           try {
+             const details = await getMediaDetails(mediaType, item.id);
+             if (details.runtime != null) {
+               runtime = details.runtime;
+             } else if (
+               details.episode_run_time &&
+               details.episode_run_time.length > 0
+             ) {
+               runtime = details.episode_run_time[0];
+             }
+           } catch (e) {
+             console.error("Failed to fetch runtime:", e);
+           }
+         }
 
-        await addWatchlistItem(user.uid, {
-          tmdbId: item.id,
-          title: item.title || item.name,
-          type: item.media_type, // "movie", "tv", etc.
-          poster: item.poster_path ?? null,
-          overview: item.overview ?? null,
-          provider,
-          logoPath,
-          duration: runtime,
-        });
-      } catch (err) {
-        console.error("Failed to add recommendation:", err);
-      } finally {
-        setAddingStates((prev) => {
-          const next = { ...prev };
-          delete next[item.id];
-          return next;
-        });
-      }
-    },
-    [user]
-  );
+         await addWatchlistItem(user.uid, {
+           tmdbId: item.id,
+           title: item.title || item.name,
+           type: mediaType,
+           poster: item.poster_path ?? null,
+           overview: item.overview ?? null,
+           provider,
+           logoPath,
+           duration: runtime,
+         });
+       } catch (err) {
+         console.error("Failed to add recommendation:", err);
+       } finally {
+         setAddingStates((prev) => {
+           const next = { ...prev };
+           delete next[item.id];
+           return next;
+         });
+       }
+     },
+     [user]
+   );
 
     const showMore = useCallback(() => {
       // If all loaded recommendations are already visible, fetch more
