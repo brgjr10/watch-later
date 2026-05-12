@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   getImageUrl,
   getRecommendations,
+  getYouTubeVideoDetails,
 } from "../api/tmdb";
 import {
   subscribeToWatchlist,
@@ -483,6 +484,16 @@ function GridItem({ item, isSelected, isSelectionMode, onToggleSelect, onToggleW
                 >
                   <X className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleNotes(item.id);
+                  }}
+                  className={`w-10 h-10 bg-white/90 hover:bg-indigo-500/90 text-gray-700 hover:text-white rounded-lg flex items-center justify-center transition-all ${item.note ? "text-indigo-400" : ""}`}
+                  title="Add/View note"
+                >
+                  <Book className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -940,6 +951,15 @@ export default function Watchlist() {
         </div>
       </header>
 
+      {watchedItems.length > 0 && (
+        <RecommendationSection
+          watchedItems={watchedItems}
+          recommendations={recommendations}
+          onFetchRecommendations={fetchRecommendations}
+          onHide={() => setRecommendations([])}
+          fetching={fetchingRecommendations}
+        />
+      )}
       {/* Content */}
       {loading ? (
         <div
@@ -991,16 +1011,6 @@ export default function Watchlist() {
         </div>
       )}
 
-      {watchedItems.length > 0 && (
-        <RecommendationSection
-          watchedItems={watchedItems}
-          recommendations={recommendations}
-          onFetchRecommendations={fetchRecommendations}
-          onHide={() => setRecommendations([])}
-          fetching={fetchingRecommendations}
-        />
-      )}
-       );
     </div>
   );
 }

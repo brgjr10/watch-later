@@ -136,24 +136,25 @@ export default function RecommendationsPage() {
   }, []);
 
   // Load watched items from Firestore on mount
-  const loadWatchedItems = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const q = query(
-        collection(db, "users", user.uid, "watchlist"),
-        where("watched", "==", true),
-        orderBy("addedAt", "desc")
-      );
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setWatchedItems(items);
-    } catch (err) {
-      console.error("Failed to load watched items:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+   const loadWatchedItems = useCallback(async () => {
+     if (!user) return;
+     setLoading(true);
+     try {
+       const q = query(
+         collection(db, "users", user.uid, "watchlist"),
+         where("watched", "==", true)
+       );
+       const snapshot = await getDocs(q);
+       const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+       // Sort by addedAt descending
+       items.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+       setWatchedItems(items);
+     } catch (err) {
+       console.error("Failed to load watched items:", err);
+     } finally {
+       setLoading(false);
+     }
+   }, [user]);
 
   useEffect(() => {
     loadWatchedItems(); // eslint-disable-line react-hooks/set-state-in-effect

@@ -128,17 +128,21 @@ function ManualAddForm({ onAdd, loading, onCancel }) {
     setType(isYouTube ? "youtube" : "movie");
   }, []);
 
-  const handleSubmit = async () => {
-    if (!title.trim()) {
-      setTitleError("Title is required");
-      return;
-    }
-    setTitleError("");
-    await onAdd({ title: title.trim(), type, provider: provider.trim(), url: url.trim() });
-    setTitle("");
-    setProvider("");
-    setUrl("");
-  };
+   const handleSubmit = async () => {
+     if (!title.trim()) {
+       setTitleError("Title is required");
+       return;
+     }
+     setTitleError("");
+     const trimmedTitle = title.trim();
+     const trimmedProvider = provider.trim();
+     // For YouTube, the URL should be the title (which contains the YouTube URL)
+     const itemUrl = type === "youtube" ? trimmedTitle : (url ? url.trim() : undefined);
+     await onAdd({ title: trimmedTitle, type, provider: trimmedProvider, url: itemUrl });
+     setTitle("");
+     setProvider("");
+     setUrl("");
+   };
 
   return (
     <div className="animate-fade-in-up">
