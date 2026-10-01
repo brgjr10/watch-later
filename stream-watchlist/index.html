@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>stream-watchlist</title>
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: https://image.tmdb.org https://img.youtube.com;
+               font-src 'self' data:;
+               connect-src 'self' https://api.themoviedb.org https://www.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
+               worker-src 'self' blob:;
+               manifest-src 'self';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self';
+               frame-ancestors 'none'"
+    />
   </head>
   <body>
     <div id="root"></div>
