@@ -1,4 +1,4 @@
-<img width="1597" height="722" alt="image" src="https://github.com/user-attachments/assets/baf05421-b761-4edd-9fa5-cc0b11344b90" />
+<img width="1280" height="640" alt="image" src="https://github.com/user-attachments/assets/4d49cb6f-e254-4094-8f88-fba4151cf736" />
 
 # React + Vite
 
